@@ -1529,6 +1529,10 @@
           if (p.mode === 'drop' && b.position.y - p.h / 2 > 2) setMode(p, 'out'); // on screen: the walls hold it now
           // on tall phone layouts, stop pulling once it's well past the tin, so nothing sinks out of sight
           if (H <= window.innerHeight || b.position.y < cy + R + 240) Body.applyForce(b, b.position, { x: 0, y: GRAVITY * b.mass });
+        } else if (p.mode === 'in' && distTo(b.position, cx, cy) > innerR()) {
+          // knocked through the tin's wall (a fast drag can shove a pick past the thin ring):
+          // still a pick, so it glides back in rather than drifting off on its own
+          sendIn(p);
         } else if (p.mode === 'out' || p.mode === 'in') {
           const dx = cx - b.position.x, dy = cy - b.position.y;
           const d = Math.hypot(dx, dy) || 1;
