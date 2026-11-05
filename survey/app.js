@@ -1702,8 +1702,8 @@
       toastTimer = setTimeout(() => toast.classList.remove('is-on'), 2200);
     }
 
-    // Tips beside the tin, each shown once (pick.tip: the first item from the list to go in;
-    // pick.customTip: the first custom item). They stack, and stay until their × is clicked.
+    // Tips beside the tin, each shown once: pick.customTip, for the first custom item (an item
+    // from the list going in gets none). They stack, and stay until their × is clicked.
     const tips = $('#pick-tips');
     const tipsShown = new Set();
     function showTip(key) {
@@ -1765,7 +1765,7 @@
       cast = cast.filter((q) => q !== p);
       p.el.classList.remove('is-cast');
       picks.push(p);
-      showTip(p.other ? 'customTip' : 'tip');
+      if (p.other) showTip('customTip'); // no tip for an item from the list
       p.el.classList.add('is-picked');
       applyThumb(p); // in the tin it becomes the burning cutout instead
       sendIn(p);
