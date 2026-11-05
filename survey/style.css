@@ -1417,6 +1417,15 @@ span.cat-chip.bi { display: inline-flex; }
   html:has(.screen--pick:not([hidden]):not(.is-reviewing)) body { overflow: hidden; overscroll-behavior: none; }
   /* with the keyboard up the list covers the question and the tin: solid, so it reads */
   .search__list { background: var(--bg); }
+  /* the field is narrower here (centred, the × in the gap on its right; app.js): the hint is
+     smaller to fit. Typed text stays 16px: below that, iPhones zoom the page in on tap. */
+  .search__field { font-size: 16px; padding: .45em .7em; }
+  /* the list keeps the whole row's width (past the field equally both sides), with a bottom edge where it overhangs */
+  .search__list { margin: 0 calc(-1 * var(--search-side, 0px)); border-bottom: 1px solid var(--fg); }
+  .search__field::placeholder { font-size: 13px; }
+  /* the × as tall as the field (16px line + padding + borders), with a finer outline and × */
+  .search__clear { --size: calc(16px * 2.2 + 6px); border-width: 1.5px; }
+  .search__clear svg { stroke-width: 1.5; }
   .pill { font-size: 11px; padding: 4px 11px; max-width: 120px; }
   .pill__zh { font-size: 9px; }
   /* searching: the loose items stay small too (the desktop sizes follow the screen's width) */

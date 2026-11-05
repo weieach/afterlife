@@ -1453,7 +1453,7 @@
       return {
         mid: window.innerHeight / 2 - stageTop,
         top: Math.max(8, textBottom + 24),
-        floor: searchMode ? H - 24 - searchField.offsetHeight : H - 8,
+        floor: searchMode ? H - (rowPad() - 6) - searchField.offsetHeight : H - 8, // just above the field
       };
     }
 
@@ -2280,7 +2280,10 @@
     // under the tin), with the × (Clear screen) just right of it. A wall keeps the capsules
     // from hiding behind them while search is open.
     const ROW_PAD = 30;
+    const ROW_PAD_PHONE = 12; // less room under the row on phones
     const CLEAR_GAP = 8; // px between the field and the ×, as in style.css
+    const narrow = matchMedia('(max-width: 700px)'); // phones, as in style.css
+    const rowPad = () => (narrow.matches ? ROW_PAD_PHONE : ROW_PAD);
     let searchWall = null;
     const wallOpts = { isStatic: true, collisionFilter: { group: 0, category: CAT.DISK, mask: CAT.OUT } };
     function placeSearch() {
@@ -2289,12 +2292,22 @@
       if (!W) return;
       const fieldH = searchField.offsetHeight || 68;
       const side = CLEAR_GAP + fieldH; // the × is square, as tall as the field
-      let width = Math.min(W - 32 - side, Math.max(300, Math.round(2.2 * R)));
-      let left = cx - width / 2; // the field stays centred under the tin; the × hangs off its right
-      if (left < 16) left = 16;
-      if (left + width + side > W - 16) { width = W - 32 - side; left = 16; }
-      const bottom = H > window.innerHeight ? Math.min(H - ROW_PAD, cy + R + 32 + fieldH) : H - ROW_PAD;
+      let width, left;
+      if (narrow.matches) {
+        // phones: the field centred with equal gaps either side, the × sitting in the right one
+        // (so nothing shifts when it appears)
+        left = 16 + side;
+        width = W - 2 * left;
+      } else {
+        width = Math.min(W - 32 - side, Math.max(300, Math.round(2.2 * R)));
+        left = cx - width / 2; // the field stays centred under the tin; the × hangs off its right
+        if (left < 16) left = 16;
+        if (left + width + side > W - 16) { width = W - 32 - side; left = 16; }
+      }
+      const pad = rowPad();
+      const bottom = H > window.innerHeight ? Math.min(H - pad, cy + R + 32 + fieldH) : H - pad;
       Object.assign(searchEl.style, { width: `${width}px`, left: `${left}px`, bottom: `${H - bottom}px` });
+      searchEl.style.setProperty('--search-side', `${side}px`); // phones: the list spreads past the field by this, both sides
       if (!searchMode) return;
       const stageRect = stage.getBoundingClientRect();
       const fieldRect = searchField.getBoundingClientRect();
