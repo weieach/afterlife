@@ -1353,9 +1353,12 @@ span.cat-chip.bi { display: inline-flex; }
 .wedge-tag.is-selected .wedge-tag__text { fill: var(--bg); }
 
 @media (max-width: 700px) {
-  .intro__launch { --stage-h: 2000px; } /* the pick screen is 2000px tall here */
   .switch { gap: 8px; }
-  .screen--pick { height: 2000px; }
+  /* one screen tall, as on desktop; no floor, so it can shrink with the keyboard
+     (interactive-widget in index.html) instead of the page scrolling */
+  .screen--pick { min-height: 0; }
+  /* with the keyboard up the list covers the question and the tin: solid, so it reads */
+  .search__list { background: var(--bg); }
   .pill { font-size: 12px; padding: 4px 12px; max-width: 130px; }
   .pill__zh { font-size: 10px; }
   .brand { font-size: 13px; }
