@@ -196,7 +196,7 @@ html.is-snapping { scroll-snap-type: y mandatory; }
    the nav is lifted out of the flow so it doesn't push them down. */
 .screen--intro {
   padding-bottom: 0;
-  --reel-size: clamp(56px, min(7vw, 10vh), 104px); /* cutouts in the first panel's row; smaller on short screens */
+  --reel-size: clamp(72px, min(11vw, 12vh), 140px); /* cutouts in the first panel's row; smaller on short screens */
 }
 .screen--intro .topbar { position: fixed; left: var(--gutter); right: var(--gutter); }
 
@@ -328,7 +328,7 @@ html.is-snapping { scroll-snap-type: y mandatory; }
   flex: none;
   width: var(--reel-size);
   height: var(--reel-size);
-  margin-right: clamp(24px, 3vw, 48px);
+  margin-right: calc(var(--reel-size) * .45); /* the gap grows with the cutouts */
   object-fit: contain;
 }
 @keyframes reel { to { transform: translateX(calc(-100% / 3)); } } /* one set of three */
@@ -1250,12 +1250,13 @@ a.btn { display: inline-block; text-align: center; text-decoration: none; }
 @media (max-width: 900px) {
   :root { --intro-text: 16.2px; }
   .demo { grid-template-columns: minmax(0, 1fr); gap: 32px; }
-  .intro__sticker { --box: 72px; }
+  /* phones 72px; tablets up to 130px. The height cap keeps short screens' rows clear of the paragraph. */
+  .intro__sticker { --box: clamp(72px, min(16vw, 13vh), 130px); }
   /* Keep cutouts clear of the paragraph: a row above it, a row below. */
-  .intro__sticker:nth-child(1) { left: 32%; top: 16%; }
-  .intro__sticker:nth-child(2) { left: 68%; top: 18%; }
-  .intro__sticker:nth-child(3) { left: 30%; top: 84%; }
-  .intro__sticker:nth-child(4) { left: 70%; top: 82%; }
+  .intro__sticker:nth-child(1) { left: 24%; top: 16%; }
+  .intro__sticker:nth-child(2) { left: 76%; top: 18%; }
+  .intro__sticker:nth-child(3) { left: 20%; top: 84%; }
+  .intro__sticker:nth-child(4) { left: 80%; top: 82%; }
   .intro__sticker:nth-child(5) { left: 50%; top: 90%; }
   .demo__form { grid-column: 1; margin-top: 8px; }
   /* phones: each pick a row, cutout on the left */
