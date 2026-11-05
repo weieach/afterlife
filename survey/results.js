@@ -24,12 +24,38 @@
     return zh && zh !== en ? `${zh} / ${en}` : en;
   }
 
+  // Text that may mix in Chinese (an English sentence with 纸扎 in it, or what someone typed):
+  // each run of Chinese characters goes in its own lang="zh-CN" span, so it gets the Chinese
+  // font (style.css --font-zh) rather than the Korean one's few look-alike characters.
+  const HAN = /[\u3000-\u303f\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff00-\uffef]+/g;
+  function setText(node, text) {
+    const s = String(text);
+    HAN.lastIndex = 0;
+    const mixed = HAN.test(s);
+    HAN.lastIndex = 0; // test() moved it on; matchAll() below starts from here
+    if (!mixed) { node.textContent = s; return node; }
+    const parts = [];
+    let at = 0;
+    for (const m of s.matchAll(HAN)) {
+      if (m.index > at) parts.push(s.slice(at, m.index));
+      const zh = document.createElement('span');
+      zh.lang = 'zh-CN';
+      zh.textContent = m[0];
+      parts.push(zh);
+      at = m.index + m[0].length;
+    }
+    if (at < s.length) parts.push(s.slice(at));
+    node.replaceChildren(...parts);
+    return node;
+  }
+
   function fillPair(node, en, zh) {
     const parts = [[zh !== en && zh, 'zh'], [en, 'en']].filter(([text]) => text).map(([text, l]) => {
       const span = document.createElement('span');
       span.className = `bi__${l}`;
       span.lang = l === 'zh' ? 'zh-CN' : 'en';
-      span.textContent = text;
+      if (l === 'zh') span.textContent = text;
+      else setText(span, text);
       return span;
     });
     node.classList.add('bi');
@@ -82,7 +108,7 @@
   function el(tag, cls, text) {
     const node = document.createElement(tag);
     if (cls) node.className = cls;
-    if (text != null) node.textContent = text;
+    if (text != null) setText(node, text); // what people typed may be Chinese
     return node;
   }
 

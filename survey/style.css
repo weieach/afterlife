@@ -11,12 +11,20 @@
   --gutter: clamp(16px, 2.6vw, 50px);
   --topbar-pad: clamp(10px, 1.4vw, 20px); /* space above the nav's contents */
   --font: "Nanum Myeongjo", "Songti SC", "Noto Serif SC", serif;
+  /* Chinese text. Nanum Myeongjo is Korean: it has only ~130 of the site's Chinese characters
+     (mostly in Korean/traditional shapes), so Chinese gets a Chinese serif first. Macs have
+     Songti SC built in; phones and other computers get Noto Serif SC from Google Fonts, which
+     downloads only the slices of characters the page uses. */
+  --font-zh: "Songti SC", "Noto Serif SC", serif;
   /* landing body text; both languages have to fit a short screen too */
   --intro-text: clamp(16.2px, min(1.71vw, 2.88vh), 27px);
   --h1-size: clamp(24px, 2.7vw, 46px); /* survey headings (.headline) */
 }
 
 * { box-sizing: border-box; }
+/* Chinese spans (lang="zh-CN", set by app.js / results.js) use the Chinese serif; rules that
+   say var(--font) pick it up there too. */
+:lang(zh) { --font: var(--font-zh); font-family: var(--font); }
 [hidden] { display: none !important; }
 
 html, body {

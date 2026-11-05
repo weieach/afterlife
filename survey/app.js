@@ -28,6 +28,31 @@
     return zh && zh !== en ? `${zh} / ${en}` : en;
   }
 
+  // Text that may mix in Chinese (an English sentence with 纸扎 in it, or what someone typed):
+  // each run of Chinese characters goes in its own lang="zh-CN" span, so it gets the Chinese
+  // font (style.css --font-zh) rather than the Korean one's few look-alike characters.
+  const HAN = /[\u3000-\u303f\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff00-\uffef]+/g;
+  function setText(node, text) {
+    const s = String(text);
+    HAN.lastIndex = 0;
+    const mixed = HAN.test(s);
+    HAN.lastIndex = 0; // test() moved it on; matchAll() below starts from here
+    if (!mixed) { node.textContent = s; return node; }
+    const parts = [];
+    let at = 0;
+    for (const m of s.matchAll(HAN)) {
+      if (m.index > at) parts.push(s.slice(at, m.index));
+      const zh = document.createElement('span');
+      zh.lang = 'zh-CN';
+      zh.textContent = m[0];
+      parts.push(zh);
+      at = m.index + m[0].length;
+    }
+    if (at < s.length) parts.push(s.slice(at));
+    node.replaceChildren(...parts);
+    return node;
+  }
+
   // Both as two spans in el, Chinese first, then English (just one when they're the same).
   // CSS stacks them, English under Chinese.
   function fillPair(el, en, zh) {
@@ -35,7 +60,8 @@
       const span = document.createElement('span');
       span.className = `bi__${l}`;
       span.lang = l === 'zh' ? 'zh-CN' : 'en';
-      span.textContent = text;
+      if (l === 'zh') span.textContent = text;
+      else setText(span, text);
       return span;
     });
     el.classList.add('bi');
@@ -82,7 +108,7 @@
     const parts = [[zh, 'zh'], [en, 'en']].filter(([text]) => text).map(([text, l]) => {
       const span = document.createElement('span');
       span.className = `${cls}__${l}`;
-      span.textContent = text;
+      setText(span, text); // a typed-in name may be Chinese
       if (l === 'zh') span.lang = 'zh-CN';
       return span;
     });
@@ -731,7 +757,7 @@
     // "下滑以继续 Scroll to continue" in the header row: fades in after 5s on the first panel,
     // fades out as you scroll on, and doesn't come back once you've scrolled past (this visit).
     const scrollTip = $('#scroll-tip');
-    scrollTip.textContent = `${t('intro.scrollTip', 'zh')} ${t('intro.scrollTip', 'en')}`;
+    setText(scrollTip, `${t('intro.scrollTip', 'zh')} ${t('intro.scrollTip', 'en')}`);
     const TIP_DELAY = 5000;
     let tipTimer = null;
     let tipRetired = false;
@@ -2467,7 +2493,7 @@
         if (!text) return;
         const span = document.createElement('span');
         span.className = `search__${l}`;
-        span.textContent = text;
+        setText(span, text);
         if (l === 'zh') span.lang = 'zh-CN';
         caption.append(span);
       });
