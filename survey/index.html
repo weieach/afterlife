@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>∞ Underworld Supply Co. — Survey</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.typekit.net/fbo5bwn.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!--
+    All visible text is filled in from content/en.js and content/zh.js, both languages at once:
+    data-t="path" sets text (English under Chinese),
+    data-t-placeholder / data-t-aria set those attributes ("中文 / English").
+  -->
+
+  <!-- Debugging mode (red, in the header row on every screen): lets you through with fewer
+       than five picks and with the required questions left blank -->
+  <label class="switch debug-switch" hidden> <!-- off for now: DEBUG_AVAILABLE in app.js -->
+    <span data-t="ui.debug"></span>
+    <input type="checkbox" id="debug-mode" role="switch">
+    <span class="switch__track" aria-hidden="true"></span>
+  </label>
+
+  <!-- 1. Intro -->
+  <section class="screen screen--intro" data-screen="intro">
+    <header class="topbar">
+      <a class="brand" href="./" data-t="brand"></a>
+      <!-- Fades in after 5s on the first panel; app.js (intro) -->
+      <p class="scroll-tip" id="scroll-tip"></p>
+    </header>
+    <!-- One full-screen panel per paragraph, built in app.js. The Start button
+         joins the last panel. -->
+    <div class="intro" id="intro">
+      <button class="btn intro__start" type="button" data-go="pick" data-t="intro.start"></button>
+    </div>
+  </section>
+
+  <!-- 2. Pick five -->
+  <section class="screen screen--pick" data-screen="pick" hidden>
+    <header class="topbar">
+      <a class="brand" href="./" data-t="brand"></a>
+      <div class="topbar__actions">
+        <div class="tools" id="tools">
+          <div class="tools__chips" id="tools-chips"></div>
+          <button class="tools__btn" type="button" id="settings-btn" aria-expanded="false" aria-controls="settings" data-t-aria="pick.settings">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg>
+          </button>
+        </div>
+        <div class="topbar__nav">
+          <button class="btn btn--outline" type="button" id="pick-back" data-go="intro" data-t="ui.back"></button>
+          <button class="btn" type="button" id="pick-continue" disabled></button>
+        </div>
+      </div>
+    </header>
+    <!-- Outside the header: the header inverts as a group, and this menu should stay readable. -->
+    <div class="settings" id="settings" hidden>
+      <div class="settings__modes" role="radiogroup" aria-labelledby="settings-mode-head">
+        <p class="settings__head" id="settings-mode-head" data-t="pick.mode"></p>
+        <label class="settings__mode"><input type="radio" name="pick-mode" id="mode-search"> <span data-t="pick.search"></span></label>
+        <label class="settings__mode"><input type="radio" name="pick-mode" id="mode-all"> <span data-t="pick.showEverything"></span></label>
+      </div>
+      <hr class="settings__divider">
+      <label class="switch">
+        <span data-t="pick.textOnly"></span>
+        <input type="checkbox" id="toggle-text" role="switch">
+        <span class="switch__track" aria-hidden="true"></span>
+      </label>
+    </div>
+    <h1 class="headline" data-t="pick.headline"></h1>
+    <div class="stage" id="stage">
+      <!-- Categorization mode: category wedges fanned out from the tin (drawn in app.js) -->
+      <svg class="wedges" id="wedges" aria-hidden="true" hidden></svg>
+      <svg class="wedge-tags" id="wedge-tags" aria-hidden="true" hidden></svg>
+      <div class="inventory" id="inventory">
+        <p class="inventory__hint" id="inventory-hint" data-t="pick.hint"></p>
+      </div>
+      <p class="toast" id="toast" role="status" aria-live="polite"></p>
+      <!-- Continue's check: make sure the picks are final before moving on -->
+      <dialog class="confirm" id="pick-confirm" aria-labelledby="pick-confirm-text">
+        <p class="confirm__text" id="pick-confirm-text" data-t="pick.confirm"></p>
+        <div class="confirm__actions">
+          <button class="btn btn--outline" type="button" id="pick-confirm-back" data-t="pick.confirmBack"></button>
+          <button class="btn" type="button" id="pick-confirm-go" data-t="pick.confirmGo"></button>
+        </div>
+      </dialog>
+      <!-- tips beside the tin, each shown once and closed with its ×: the first item from the list
+           to go in, and the first custom item (built and placed in app.js) -->
+      <div class="pick-tips" id="pick-tips" aria-live="polite"></div>
+      <!-- Search mode: a field near the bottom; the list above it is built in app.js -->
+      <div class="search" id="search" hidden>
+        <div class="search__list" id="search-list" hidden></div>
+        <input class="search__field" id="search-field" type="text" autocomplete="off" spellcheck="false"
+               data-t-placeholder="pick.searchPlaceholder" data-t-aria="pick.search">
+        <!-- under the field, only while there are loose items on screen: drops them all out -->
+        <button class="search__clear" type="button" id="search-clear" data-t="pick.clear" hidden></button>
+      </div>
+    </div>
+
+
+    <!-- Your picks (#/details): the tin slides aside and a card for each pick stacks beside it
+         (placed in app.js). Each pick burns away in the tin once its card is filled in. -->
+    <div class="picks" id="picks" hidden>
+      <h2 class="picks__title" data-t="details.title"></h2>
+      <div class="details" id="details" role="group" data-t-aria="details.title">
+        <div class="details__stack" id="details-stack"></div>
+      </div>
+      <div class="demo__nav picks__nav">
+        <button class="btn btn--outline" type="button" id="details-back" data-t="ui.back"></button>
+        <button class="btn" type="button" id="details-next" data-t="details.continue"></button>
+      </div>
+    </div>
+
+    <template id="card-template">
+      <article class="card">
+        <div class="card__head">
+          <div class="card__thumb" hidden><img alt=""></div>
+          <p class="card__item"></p>
+        </div>
+        <label class="field card__other">
+          <span class="field__label" data-t="details.otherName"></span>
+          <textarea class="card__input" name="other" rows="1" data-t-placeholder="details.otherNamePlaceholder"></textarea>
+        </label>
+        <label class="field">
+          <span class="field__label" data-t="details.variation"></span>
+          <textarea class="card__input" name="variation" rows="1" data-t-placeholder="details.variationPlaceholder"></textarea>
+        </label>
+        <label class="field">
+          <span class="field__label" data-t="details.reason"></span>
+          <textarea class="card__input" name="reason" rows="1" data-t-placeholder="details.reasonPlaceholder"></textarea>
+        </label>
+        <p class="card__count"></p>
+      </article>
+    </template>
+  </section>
+
+  <!-- 3. About you -->
+  <section class="screen screen--about" data-screen="about" hidden>
+    <header class="topbar">
+      <a class="brand" href="./" data-t="brand"></a>
+      <!-- Back, and Continue / Submit (a submit button for the form below) -->
+      <div class="topbar__actions">
+        <button class="btn btn--outline" type="button" id="demo-back" data-t="ui.back"></button>
+        <button class="btn" type="submit" form="demo-form" id="demo-next" disabled></button>
+      </div>
+    </header>
+    <!-- Two pages: the four required questions together (#/about/1), then sharing choices and
+         last thoughts, with Submit (#/about/2). -->
+    <div class="demo">
+      <form class="demo__form" id="demo-form" novalidate>
+        <!-- page 1: what the answers are for, then the four required questions -->
+        <div class="demo__group demo__step" data-step="1">
+          <p class="demo__divider" data-t="about.researchNote"></p>
+
+          <label class="field">
+            <span class="field__label" data-t="about.age"></span>
+            <select name="age" required>
+              <option value="" selected disabled data-t="about.agePlaceholder"></option>
+              <option value="under-18" data-t="about.ageRanges.under-18"></option>
+              <option value="18-24" data-t="about.ageRanges.18-24"></option>
+              <option value="25-34" data-t="about.ageRanges.25-34"></option>
+              <option value="35-44" data-t="about.ageRanges.35-44"></option>
+              <option value="45-54" data-t="about.ageRanges.45-54"></option>
+              <option value="55-64" data-t="about.ageRanges.55-64"></option>
+              <option value="65-plus" data-t="about.ageRanges.65-plus"></option>
+            </select>
+          </label>
+
+          <fieldset class="field">
+            <legend class="field__label" data-t="about.heritage"></legend>
+            <label class="choice"><input type="radio" name="heritage" value="born-in-china" required> <span data-t="about.heritageOptions.born-in-china"></span></label>
+            <label class="choice"><input type="radio" name="heritage" value="first-gen"> <span data-t="about.heritageOptions.first-gen"></span></label>
+            <label class="choice"><input type="radio" name="heritage" value="second-gen-plus"> <span data-t="about.heritageOptions.second-gen-plus"></span></label>
+            <label class="choice"><input type="radio" name="heritage" value="none"> <span data-t="about.heritageOptions.none"></span></label>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend class="field__label" data-t="about.residence"></legend>
+            <label class="choice"><input type="radio" name="residence" value="mainland" required> <span data-t="about.residenceOptions.mainland"></span></label>
+            <label class="choice"><input type="radio" name="residence" value="hk-macao-taiwan"> <span data-t="about.residenceOptions.hk-macao-taiwan"></span></label>
+            <label class="choice"><input type="radio" name="residence" value="overseas"> <span data-t="about.residenceOptions.overseas"></span></label>
+            <!-- abroad: which country (required then) -->
+            <label class="field field--sub" id="country-field" hidden>
+              <span class="field__label" data-t="about.country"></span>
+              <input type="text" name="country" autocomplete="country-name" disabled>
+            </label>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend class="field__label" data-t="about.burning"></legend>
+            <label class="choice"><input type="radio" name="burning" value="every-year" required> <span data-t="about.burningOptions.every-year"></span></label>
+            <label class="choice"><input type="radio" name="burning" value="occasionally"> <span data-t="about.burningOptions.occasionally"></span></label>
+            <label class="choice"><input type="radio" name="burning" value="tried-before"> <span data-t="about.burningOptions.tried-before"></span></label>
+            <label class="choice"><input type="radio" name="burning" value="never"> <span data-t="about.burningOptions.never"></span></label>
+          </fieldset>
+        </div>
+
+        <!-- the last page (Submit is here): about the public gallery, a nickname for it, what may
+             be shared (boxes on the right), then anything else to say. The custom-items box shows
+             only when there are custom items. -->
+        <div class="demo__optional demo__step" data-step="2">
+          <p class="demo__divider" data-t="about.galleryNote"></p>
+          <label class="field">
+            <span class="field__label" data-t="about.nickname"></span>
+            <input type="text" name="nickname" maxlength="40" autocomplete="nickname">
+          </label>
+          <div class="demo__consents">
+            <label class="choice"><input type="checkbox" name="publish" checked> <span data-t="about.publish"></span></label>
+            <label class="choice"><input type="checkbox" name="showReasons" checked> <span data-t="about.showReasons"></span></label>
+            <label class="choice" id="share-custom"><input type="checkbox" name="shareCustom" checked> <span data-t="about.shareCustom"></span></label>
+          </div>
+          <label class="field">
+            <span class="field__label" data-t="about.thoughts"></span>
+            <textarea name="thoughts" rows="4"></textarea>
+          </label>
+        </div>
+
+        <p class="demo__msg" id="demo-msg" role="alert"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- 4. Thank you -->
+  <section class="screen screen--thanks" data-screen="thanks" hidden>
+    <header class="topbar">
+      <a class="brand" href="./" data-t="brand"></a>
+    </header>
+    <div class="thanks">
+      <h1 class="headline" data-t="thanks.headline"></h1>
+      <div class="thanks__actions">
+        <button class="btn" type="button" id="restart" data-t="thanks.home"></button>
+        <button class="btn" type="button" id="see-results" data-t="thanks.results"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Flame outline: turns the soft glow of the flame particles into a crisp edge while the
+       colour inside stays blurred (like a candle flame). Applied to .pill__flames in CSS. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <filter id="flame-edge" color-interpolation-filters="sRGB">
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 0.08 0.6 0.88 0.94 0.96 0.97 0.98 0.99 1 1"/>
+      </feComponentTransfer>
+    </filter>
+  </svg>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <!-- The logo leads home; leaving mid-survey asks first (app.js leaveDialog). -->
+  <dialog class="leave" id="leave-dialog" aria-labelledby="leave-title">
+    <form class="leave__box" method="dialog">
+      <h2 class="leave__title" id="leave-title" data-t="leave.title"></h2>
+      <p class="leave__body" data-t="leave.body"></p>
+      <div class="leave__actions">
+        <button class="btn btn--outline" value="stay" autofocus data-t="leave.stay"></button>
+        <button class="btn" value="leave" data-t="leave.leave"></button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="config.js"></script>
+  <script src="db.js"></script>
+  <script src="content/en.js"></script>
+  <script src="content/zh.js"></script>
+  <script src="content/images.js"></script>
+  <script src="noise.js"></script>
+  <script src="infinity.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

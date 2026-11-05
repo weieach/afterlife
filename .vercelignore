@@ -1,0 +1,23 @@
+# Vercel uploads only what the site uses: the survey (survey/), the web cutouts it shows
+# (survey/content/images.js) and the three images from assets/ it loads.
+# Source files, originals and working folders stay local.
+/artifact cutout/
+/artifact cutout (web)/
+/artifact list/
+/survey low-fi/
+/supabase/
+/tools/
+/.claude/
+/.vscode/
+/*.png
+/*.md
+.DS_Store
+
+/assets/*
+!/assets/altar-v3 (web).webp
+!/assets/cookie can (web).png
+!/assets/tin can side view.png
+
+# Vercel link files and tokens
+.vercel
+.env*

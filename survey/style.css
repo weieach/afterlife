@@ -1,0 +1,1393 @@
+/* Low-fi: black on white. Swap tokens here when moving to hi-fi. */
+:root {
+  --fg: #000;
+  --bg: #fff;
+  --muted: #6b6b6b;
+  --soft: #f2f2f2;
+  --sticky: #fff27a; /* detail cards */
+  --disabled-bg: #d6d6d6;
+  --disabled-fg: #6b6b6b;
+  --gutter: clamp(16px, 2.6vw, 50px);
+  --topbar-pad: clamp(10px, 1.4vw, 20px); /* space above the nav's contents */
+  --font: "Nanum Myeongjo", "Songti SC", "Noto Serif SC", serif;
+  /* landing body text; both languages have to fit a short screen too */
+  --intro-text: clamp(16.2px, min(1.71vw, 2.88vh), 27px);
+  --h1-size: clamp(24px, 2.7vw, 46px); /* survey headings (.headline) */
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- shared ---------- */
+
+.screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 0 var(--gutter) var(--gutter);
+  display: flex;
+  flex-direction: column;
+}
+
+/* The nav floats over the page with an exclusion blend, so it inverts whatever
+   passes beneath it. Colours here are the inverse of what shows on white. */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: var(--topbar-pad) 0 8px;
+  color: #fff;
+  mix-blend-mode: exclusion;
+  pointer-events: none; /* let capsules underneath be grabbed between the controls */
+}
+.topbar > * { pointer-events: auto; }
+.brand { flex: 0 1 auto; min-width: 0; font-size: 18px; line-height: 1.3; }
+a.brand { color: inherit; text-decoration: none; }
+.topbar__actions { flex: none; display: flex; align-items: center; gap: 8px; }
+.topbar__nav { display: flex; align-items: center; gap: 8px; }
+.topbar .btn { background: #fff; color: #000; border-color: #fff; }
+.topbar .btn:not(:disabled):hover { background: #000; color: #fff; border-color: #fff; }
+.topbar .btn:disabled { background: #292929; border-color: #292929; color: #949494; }
+/* Back: same box as Continue, outline only */
+.topbar .btn.btn--outline { min-width: 0; margin: 0; background: transparent; color: #fff; border-color: #fff; }
+.topbar .btn.btn--outline:not(:disabled):hover { background: #fff; color: #000; }
+.topbar :focus-visible { outline-color: #fff; }
+
+/* Bilingual text (app.js fill()): Chinese with the English right under it, at the same size. */
+span.bi { display: inline-block; }
+.bi > .bi__en, .bi > .bi__zh { display: block; }
+.headline > .bi__en { margin-top: .15em; }
+@media (max-width: 700px) {
+  .brand { flex: 1 1 0; } /* the nav is tight on a phone: let the name take what's left */
+}
+
+.headline {
+  font-weight: 500;
+  font-size: var(--h1-size);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  max-width: 15em;
+  margin: clamp(16px, 2.5vw, 36px) 0 0;
+  text-wrap: balance; /* no lone word on a last line */
+}
+/* English headings in Scatterplot (Adobe Fonts kit in the page head); Chinese keeps the serif */
+.headline:lang(en) { font-family: "scatterplot-vf", var(--font); }
+.headline .bi__en { font-weight: 300; font-size: .85em; } /* Scatterplot's lightest, a step under the Chinese */
+.headline :lang(zh) { font-family: var(--font); }
+
+.btn {
+  font: inherit;
+  font-size: 14px;
+  background: var(--fg);
+  color: var(--bg);
+  border: 1px solid var(--fg);
+  border-radius: 0;
+  padding: 12px 28px;
+  min-width: 160px;
+  cursor: pointer;
+}
+.btn:not(:disabled):hover { background: var(--bg); color: var(--fg); }
+.btn:disabled {
+  background: var(--disabled-bg);
+  border-color: var(--disabled-bg);
+  color: var(--disabled-fg);
+  cursor: not-allowed;
+}
+.btn--small { padding: 8px 20px; min-width: 0; font-size: 13px; }
+
+.link {
+  font: inherit;
+  font-size: 14px;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 4px 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+
+/* ---------- form fields ---------- */
+
+.field { display: flex; flex-direction: column; gap: 8px; border: 0; margin: 0; padding: 0; min-width: 0; }
+.field__label { font-size: 18px; line-height: 1.3; padding: 0; }
+.field > .field__label { margin-bottom: 12px; } /* air between the question and its answer */
+.field__hint { font-size: 14px; color: var(--muted); margin-top: -4px; }
+
+.field input[type="text"],
+.field input[type="email"],
+.field select {
+  font: inherit;
+  font-size: 16px;
+  color: var(--fg);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  width: 100%;
+}
+.field input[type="text"],
+.field input[type="email"] {
+  border-bottom: 2px solid var(--fg);
+  padding: 10px 0;
+}
+.field input[type="text"]:focus,
+.field input[type="email"]:focus {
+  outline: none;
+}
+.field select {
+  appearance: none;
+  background-color: var(--bg);
+  background-image: linear-gradient(45deg, transparent 50%, #000 50%), linear-gradient(135deg, #000 50%, transparent 50%);
+  background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%;
+  background-size: 6px 6px;
+  background-repeat: no-repeat;
+  border: 1px solid var(--fg);
+  padding: 12px 40px 12px 14px;
+}
+::placeholder { color: #9a9a9a; }
+
+.choice { display: flex; align-items: flex-start; gap: 10px; font-size: 16px; padding: 4px 0; cursor: pointer; }
+.choice input { accent-color: var(--fg); width: 18px; height: 18px; margin: 3px 0 0; flex: 0 0 18px; }
+.choice input[type="checkbox"] {
+  appearance: none;
+  border: 1px solid var(--fg);
+  background-color: var(--bg);
+  background-image: none;
+  display: grid;
+  place-items: center;
+}
+.choice input[type="checkbox"]::after {
+  content: "";
+  width: 8px;
+  height: 4px;
+  border-left: 2px solid var(--bg);
+  border-bottom: 2px solid var(--bg);
+  transform: translateY(-1px) rotate(-45deg);
+  opacity: 0;
+}
+.choice input[type="checkbox"]:checked { background-color: var(--fg); }
+.choice input[type="checkbox"]:checked::after { opacity: 1; }
+.field--sub { margin-top: 8px; padding-left: 28px; }
+fieldset.field > legend.field__label { margin-bottom: 20px; } /* legend sits outside the flex gap */
+
+/* ---------- 1. intro ---------- */
+
+/* Mandatory snap on the page while the intro shows; snap-stop keeps a big
+   flick from skipping a paragraph. */
+html.is-snapping { scroll-snap-type: y mandatory; }
+
+/* Panels are exactly one viewport tall so scroll snapping lands cleanly;
+   the nav is lifted out of the flow so it doesn't push them down. */
+.screen--intro {
+  padding-bottom: 0;
+  --reel-size: clamp(56px, min(7vw, 10vh), 104px); /* cutouts in the first panel's row; smaller on short screens */
+}
+.screen--intro .topbar { position: fixed; left: var(--gutter); right: var(--gutter); }
+
+/* "下滑以继续 Scroll to continue": centred in the header row, faded. app.js adds .is-shown
+   after 5s on the first panel and drops it once you scroll on. */
+.scroll-tip {
+  position: absolute;
+  top: var(--topbar-pad);
+  bottom: 8px; /* the topbar's own padding, so it lines up with the logo */
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  margin: 0;
+  font-size: 14px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none !important;
+  transition: opacity 1.2s ease, visibility 0s linear 1.2s;
+}
+.scroll-tip.is-shown { opacity: .5; visibility: visible; transition: opacity 1.2s ease, visibility 0s; }
+@media (max-width: 700px) {
+  /* the logo takes most of a phone's row: sit at the right end instead of over it */
+  .scroll-tip { left: auto; right: 0; transform: none; font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroll-tip, .scroll-tip.is-shown { transition: none; }
+}
+
+.intro__panel {
+  position: relative;
+  height: 100vh;
+  height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 72px 0 48px;
+  text-align: center;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+/* keep the (two-language) text clear of the cutout row along the bottom */
+.intro__panel:first-child { padding-bottom: calc(var(--topbar-pad) + var(--reel-size) + 16px); }
+.intro__stickers { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.intro__sticker {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  --box: min(var(--size, 140px), 22vw);
+  width: var(--box);
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+/* Resting tilt lives here so the bob stays vertical; GSAP takes over this transform. */
+.intro__sticker-float {
+  display: block;
+  transform: rotate(var(--rot, 0deg));
+  transform-origin: center;
+}
+.intro__sticker-pop { position: relative; display: block; transform-origin: center; }
+/* hover burn: a canvas over the cutout (which hides) plus its flames (.pill__flames) */
+.intro__burn { position: absolute; pointer-events: none; }
+.intro__burn-img { display: block; width: 100%; height: 100%; }
+/* fits a square box, so tall cutouts (the cane) are no taller than the others are wide */
+.intro__sticker img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: var(--box);
+  margin: 0 auto;
+  transform-origin: center;
+}
+.intro__inner {
+  position: relative;
+  z-index: 1;
+  max-width: 30em;
+  font-size: var(--intro-text);
+  line-height: 1.3;
+}
+.intro__inner p { margin: 0; }
+/* the altar illustration above the first paragraph: sized off the screen height, so it and
+   the paragraph stay clear of the row of cutouts at the bottom */
+.intro__altar {
+  display: block;
+  width: auto;
+  height: clamp(150px, 30vh, 340px);
+  margin: 0 auto 1.2em;
+}
+.intro__inner p > .bi__en { margin-top: .5em; } /* the English paragraph under the Chinese */
+/* the ∞ over the third paragraph: dots on a canvas (app.js), twice heading size. The box
+   keeps the mark's own height in the layout; the canvas is larger, so scattered dots can
+   spill past it. */
+.intro__infinity {
+  position: relative;
+  height: .6em;
+  margin: 0 auto .9em;
+  font-size: calc(var(--h1-size) * 2);
+  line-height: 1;
+}
+.intro__infinity canvas {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+/* the last prompt rides higher, so it and the tin hanging below it sit nearer the middle */
+.intro__panel:last-child .intro__inner { top: -12vh; }
+/* row of cutouts near the bottom of the first panel: edge to edge, sliding left on a loop.
+   Out of the text's flow, so the description stays centred. */
+.intro__reel {
+  position: absolute;
+  left: calc(-1 * var(--gutter));
+  right: calc(-1 * var(--gutter));
+  bottom: var(--topbar-pad); /* as far from the bottom as the nav is from the top */
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+.intro__reel-track {
+  display: flex;
+  width: max-content;
+  animation: reel 31s linear infinite; /* about the same speed as before the gap shrank */
+}
+.intro__reel:hover .intro__reel-track { animation-play-state: paused; }
+/* each cutout fits a square, so tall ones (the cane) stay in line */
+.intro__reel img {
+  flex: none;
+  width: var(--reel-size);
+  height: var(--reel-size);
+  margin-right: clamp(24px, 3vw, 48px);
+  object-fit: contain;
+}
+@keyframes reel { to { transform: translateX(calc(-100% / 3)); } } /* one set of three */
+@media (prefers-reduced-motion: reduce) {
+  .intro__reel-track { animation: none; }
+}
+/* As wide as the top-view tin on the pick screen: the same 2R as layout() in app.js,
+   R = 30% of the stage's shorter side (the screen), kept within 90-230px.
+   Hangs below the prompt, out of its flow, so the prompt stays centred on the screen. */
+.intro__launch {
+  --stage-h: max(100dvh, 560px);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  width: clamp(180px, min(100vw, var(--stage-h)) * 0.6, 460px);
+  margin: 2em auto 0;
+}
+/* Start: white on a black block, the size of the paragraph above it, sitting on the middle of the tin */
+.intro__start {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  top: 50%;
+  margin: 0;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+}
+.intro__start.btn,
+.intro__start.btn:not(:disabled):hover {
+  min-width: 0;
+  padding: .3em .9em; /* sized off the paragraph text */
+  border: 0;
+  background: var(--fg);
+  color: var(--bg);
+  font-size: inherit;
+  font-weight: 700;
+  line-height: inherit;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  text-decoration: underline;
+  text-underline-offset: .2em;
+  text-decoration-thickness: 1px;
+}
+.intro__start.btn:not(:disabled):hover { text-decoration-thickness: 2px; } /* always underlined; hover thickens it */
+/* The source is a square canvas; these fractions are the can's opaque bounds. */
+.intro__tin {
+  display: block;
+  width: 100%;
+  aspect-ratio: 259 / 130;
+  margin: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transform-origin: center;
+}
+.intro__tin img {
+  display: block;
+  width: calc(100% / 0.71944);
+  max-width: none;
+  height: auto;
+  transform: translate(-13.889%, -33.611%);
+}
+/* "See other people's results": an underlined line of text centred under the tin */
+.intro__results.link {
+  display: table; /* shrink to the text, so only the words are the link */
+  margin: 1.2em auto 0;
+  padding: 4px 0;
+  font-size: .72em;
+  text-align: center;
+  text-decoration-thickness: 1px;
+}
+.intro__results.link:hover { text-decoration-thickness: 2px; }
+.intro__results.bi > .bi__zh, .intro__results.bi > .bi__en { display: block; } /* two lines: Chinese, then English */
+/* the landing tin, held on screen over the pick screen's entrance (moved by app.js) */
+.intro__tin.tin-ghost { position: fixed; z-index: 10; margin: 0; }
+
+/* ---------- 2. pick ---------- */
+
+.screen--pick { position: relative; height: 100vh; height: 100dvh; min-height: 560px; }
+.screen--pick .headline {
+  position: relative;
+  z-index: 0;
+  max-width: none;
+  margin-top: calc(16px - var(--title-lift, 0px)); /* a little higher, so it clears the can */
+  pointer-events: none;
+  /* white outline drawn behind the letters; invisible until hovered */
+  -webkit-text-stroke: 18px rgba(255, 255, 255, 0);
+  paint-order: stroke fill;
+  transition: -webkit-text-stroke-color .3s ease, z-index 0s .3s, opacity .4s ease; /* drop back only after fading */
+}
+.screen--pick .headline.is-raised {
+  z-index: 3; /* above capsules, below detail cards and nav */
+  -webkit-text-stroke-color: #fff;
+  transition: -webkit-text-stroke-color .3s ease, z-index 0s, opacity .4s ease;
+}
+
+/* entrance after Start: only the question shows at first (it's centred and moved in app.js);
+   the rest fades in once it has risen into place */
+.screen--pick .topbar,
+.screen--pick .stage { transition: opacity .7s ease, transform .7s ease; }
+.screen--pick .stage { transition-delay: .1s; }
+.screen--pick .inventory { transition: background-color .2s, transform .9s cubic-bezier(.2, .8, .2, 1) .1s, opacity .7s ease .1s; }
+.screen--pick.is-entering .topbar,
+.screen--pick.is-entering .stage { opacity: 0; pointer-events: none; transition: none; }
+.screen--pick.is-entering .inventory { transform: translateY(160px); opacity: 0; transition: none; } /* rises in from below */
+
+/* capsules can roam the whole screen, over the headline and under the nav */
+.stage {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.inventory {
+  position: absolute;
+  container-type: size; /* the hint sizes itself to the tin (cq units) */
+  border: 1.5px dashed var(--fg);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  transition: background-color .2s;
+}
+.inventory.is-target { background: var(--soft); }
+.inventory.has-image {
+  border: 0;
+  background: center / contain no-repeat;
+  transition: transform .2s;
+}
+.inventory.has-image.is-target { transform: scale(1.03); }
+.inventory.has-image .inventory__hint { color: #222; }
+/* centred in the tin at any size: its width and text scale with the tin, lines evened out */
+.inventory__hint {
+  margin: 0;
+  max-width: 60cqw;
+  text-align: center;
+  text-wrap: balance;
+  font-size: clamp(12px, 7cqw, 17px);
+  line-height: 1.3;
+  color: #4a4a4a;
+}
+
+.pill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 150px; /* long names wrap onto more lines */
+  text-align: center;
+  overflow-wrap: break-word;
+  padding: 5px 16px;
+  border: 1px solid var(--fg);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 13px;
+  line-height: 1.2;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  will-change: transform;
+  transition: background-color .15s, color .15s, opacity .3s;
+}
+.pill:hover { background: var(--soft); }
+.pill:focus,
+.pill:focus-visible { outline: none; }
+.pill.is-picked { background: var(--fg); color: var(--bg); }
+.pill__zh { font-size: 11px; color: var(--muted); }
+.pill.is-picked .pill__zh { color: #b5b5b5; }
+.pill--other {
+  justify-content: center;
+  overflow-wrap: anywhere;
+  overflow: hidden;
+}
+/* the spare "Other": its fill is the drifting noise of the search list's "Add …" thumbnail
+   (a canvas from app.js), under white text. In the tin, or typed-in and taken back out
+   (search mode), it's an ordinary pill. */
+.pill__noise { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.pill--other > span { position: relative; } /* over the noise */
+.pill--other:not(.is-picked):not(.is-cast) { color: #fff; }
+.pill--other:not(.is-picked):not(.is-cast) .pill__zh { color: rgba(255, 255, 255, .85); }
+.pill--other.is-picked .pill__noise,
+.pill--other.is-cast .pill__noise { display: none; }
+/* a custom item (typed in) waiting outside the tin: its text half as large again */
+.pill.pill--other.is-cast:not(.is-picked) { max-width: 225px; font-size: 19.5px; }
+.stage.is-searching .pill.pill--other.is-cast:not(.is-picked) {
+  max-width: clamp(225px, 18vw, 285px);
+  font-size: calc(1.5 * clamp(13px, 1.05vw, 16px));
+}
+.pill.is-dragging { cursor: grabbing; z-index: 2; box-shadow: 0 4px 12px rgba(0, 0, 0, .07); }
+/* searching: loose items a little larger, scaled to the screen's width (their cutouts in app.js) */
+.stage.is-searching .pill:not(.is-picked) { font-size: clamp(13px, 1.05vw, 16px); }
+.stage.is-searching .pill:not(.is-picked) .pill__zh { font-size: .85em; }
+.stage.is-searching .pill:not(.is-picked):not(.as-thumb) { max-width: clamp(150px, 12vw, 190px); }
+.stage.is-searching .pill.as-thumb .pill__en,
+.stage.is-searching .pill.as-thumb .pill__zh { max-width: clamp(140px, 11vw, 180px); }
+
+/* picked item with a cutout: the pill disappears, only the image remains */
+.pill.as-image,
+.pill.as-image:hover,
+.pill.as-thumb,
+.pill.as-thumb:hover {
+  max-width: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+.pill.as-image .pill__en,
+.pill.as-image .pill__zh { display: none; }
+/* "Show image": the names sit under the cutout, no capsule (unless they ring it, picked from the list) */
+.pill.as-thumb { gap: 3px; }
+.pill.as-thumb .pill__en,
+.pill.as-thumb .pill__zh { max-width: 140px; }
+.pill.as-thumb:has(> .pill__ring) .pill__en,
+.pill.as-thumb:has(> .pill__ring) .pill__zh { display: none; }
+/* "Show image not text": loose items with a cutout show it instead of their name */
+.pill__thumb { display: block; pointer-events: none; filter: drop-shadow(0 3px 8px rgba(0, 0, 0, .08)); transition: filter .15s; } /* wide, soft and light */
+/* categorization: hovering a wedge fades everything outside it; picking one hides the rest */
+.pill.is-dim { opacity: .12; }
+.pill.is-filtered-out { display: none; }
+/* dragged: the shadow follows the cutout itself, not the box round it and its names */
+.pill.as-image.is-dragging,
+.pill.as-thumb.is-dragging { box-shadow: none; }
+.pill.as-thumb.is-dragging .pill__thumb { filter: drop-shadow(0 8px 14px rgba(0, 0, 0, .2)); }
+.pill.as-image.is-dragging .pill__img { filter: drop-shadow(0 8px 14px rgba(0, 0, 0, .3)); }
+.pill__img {
+  display: block;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, .22)); /* sits in the tin */
+  transition: filter .15s;
+}
+
+.pill { transition: background-color .15s, color .15s, opacity .3s, box-shadow .15s; }
+.pill.is-leaving { opacity: 0; pointer-events: none; }
+/* a plain pill redrawn to burn away on Continue: it never sat in the tin with a shadow */
+.pill__img--snapshot { filter: none; }
+/* live flames over a burning cutout; overhangs the image (mostly upward) */
+.pill__flames {
+  position: absolute;
+  pointer-events: none;
+  /* blur merges the particles into one sheet; #flame-edge then gives that sheet a crisp outline
+     while the colour inside stays soft (like a candle flame); last, a faint warm halo */
+  filter: blur(1.5px) url(#flame-edge) drop-shadow(0 0 6px rgba(255, 150, 50, .45));
+}
+
+/* cutout image that floats above the hovered / dragged pill (one shared element) */
+.pill-preview {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  width: 220px;
+  max-height: 210px;
+  object-fit: contain;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s;
+  will-change: transform;
+}
+.pill-preview.is-on { opacity: 1; }
+
+.toast {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translate(-50%, 8px);
+  margin: 0;
+  padding: 10px 16px;
+  background: var(--fg);
+  color: var(--bg);
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s, transform .2s;
+  z-index: 3;
+}
+.toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+.stage.is-searching .toast { bottom: var(--search-clear, 12px); z-index: 5; } /* above the search field */
+
+/* tips: small black notes pointing at the tin, stacked (left/top from app.js); × closes one */
+.pick-tips {
+  position: absolute;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: max-content;
+  max-width: 280px;
+}
+.pick-tips:empty { display: none; }
+.pick-tips.is-side { transform: translateY(-50%); }
+.pick-tips.is-above { transform: translate(-50%, -100%); }
+.pick-tip {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 8px 10px 14px;
+  background: var(--fg);
+  color: var(--bg);
+  font-size: 13px;
+  line-height: 1.35;
+  opacity: 0;
+  transition: opacity .25s;
+}
+.pick-tip.is-on { opacity: 1; }
+.pick-tip__text { margin: 0; }
+.pick-tip__text > .bi__zh { font-size: 17px; } /* the Chinese larger than the English */
+.pick-tip__text > .bi__en { margin-top: .35em; opacity: .85; }
+.pick-tip__close {
+  flex: none;
+  margin: -4px 0 0;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.pick-tip__close:hover { opacity: .7; }
+.pick-tip::before { content: ''; position: absolute; border: 6px solid transparent; }
+.pick-tips.is-side .pick-tip::before { right: 100%; top: 50%; margin-top: -6px; border-right-color: var(--fg); }
+.pick-tips.is-above .pick-tip:last-child::before { top: 100%; left: 50%; margin-left: -6px; border-top-color: var(--fg); }
+
+/* picked from the search list: the item's names ring its cutout for a moment (built in app.js) */
+.pill__ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  overflow: visible;
+  pointer-events: none;
+}
+.pill__ring text {
+  font-family: var(--font);
+  fill: var(--fg);
+  stroke: var(--bg);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
+}
+
+/* ---------- pick screen: search mode ---------- */
+
+/* A big field near the bottom (text the size of the landing paragraphs); the list of
+   categories and items rises from it, see-through enough to show the tin behind.
+   Width and position come from app.js (placeSearch). */
+.search {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  font-size: clamp(20px, 1.9vw, 30px);
+}
+.search__field {
+  position: relative;
+  z-index: 1; /* over the list as it slides up out from behind it */
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: .5em .8em;
+  border: 3px solid var(--fg);
+  border-radius: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  font-size: var(--intro-text); /* the landing body text */
+  line-height: 1.3;
+}
+/* "Clear screen": underlined text in the strip under the field */
+.search__clear {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.search__clear > .bi__zh,
+.search__clear > .bi__en { display: inline; }
+.search__clear > .bi__zh::after { content: '\00a0'; } /* a space inside the underline: one line under both */
+.search__field::placeholder { color: var(--fg); opacity: .45; transition: opacity .2s; }
+.search__field:focus { outline: none; }
+.search__field:focus::placeholder { opacity: .25; } /* active: the hint steps back further */
+
+.search__list {
+  will-change: transform, opacity; /* slides in, fades out (app.js) */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--fg);
+  border-bottom: 0;
+  background: rgba(255, 255, 255, .78); /* translucent white: the tin shows through */
+  font-size: max(14px, .58em);
+  line-height: 1.2;
+}
+.search__cat,
+.search__item,
+.search__row {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  font: inherit;
+  cursor: pointer;
+  background: transparent; /* the list's translucent white */
+  transition: background-color .15s;
+}
+.search__cat:hover,
+.search__item:hover,
+.search__row:hover,
+.search__cat:focus-visible,
+.search__item:focus-visible,
+.search__row:focus-visible { background: rgba(255, 255, 255, .97); outline: none; }
+
+/* Thin header lines: the list's (pinned to its top) and the "Add …" row's */
+.search__head {
+  margin: 0;
+  padding: .35em .8em;
+  border-bottom: 1px solid var(--fg);
+  background: var(--bg);
+  font-size: .8em;
+}
+.search__head > .bi__zh,
+.search__head > .bi__en { display: inline; }
+.search__head > .bi__zh { margin-right: .4em; }
+.search__head--stack > .bi__zh,
+.search__head--stack > .bi__en { display: block; }
+.search__head--stack > .bi__zh { margin-right: 0; }
+.search__list > .search__head {
+  position: sticky;
+  top: 0;
+  z-index: 2; /* over the blocks' hairlines */
+}
+.search__list > .search__head--stack {
+  padding: .6em calc(0.8 * var(--intro-text) + 2px); /* lines up with the field's text (its 3px border less the list's 1px); a little more air above and below */
+}
+
+/* The list's grid (built in app.js): one grid of equal blocks, three to a row. While something's
+   typed, each category's matching items follow its tile block by block.
+   Each block draws its own right and bottom hairline on a layer above every block's background,
+   so a hovered (whiter) block can't cover its neighbours' lines. The grid has its own outline,
+   set in a little from the list's, so the two read as a double line; it clips the blocks'
+   outermost lines, which would only double its own. */
+.search__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 1fr;
+  margin: 7px;
+  border: 1px solid var(--fg);
+  box-shadow: 0 0 0 7px var(--bg); /* the gap between the two lines is solid white; inside stays see-through */
+  overflow: hidden;
+}
+.search__cat,
+.search__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .4em;
+  min-width: 0;
+  position: relative;
+  padding: .7em .5em .6em;
+  text-align: center;
+}
+.search__item::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: .4em;
+  background: var(--cat);
+}
+.search__cat::after,
+.search__item::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  inset: 0 -1px -1px 0;
+  border-right: 1px solid var(--fg);
+  border-bottom: 1px solid var(--fg);
+  pointer-events: none;
+}
+/* the same square behind every cutout; a category's is filled with its colour */
+.search__cat-img,
+.search__item-img {
+  flex: none;
+  display: block;
+  width: 5.4em;
+  height: 5.4em;
+  padding: .35em;
+  overflow: hidden; /* the cutout never spills past the square */
+}
+.search__cat-img { background: var(--cat); }
+.search__cat-img img,
+.search__item-img img { display: block; width: 100%; height: 100%; max-width: none; object-fit: contain; }
+.search__cat-name { font-size: .88em; line-height: 1.2; color: var(--cat-deep); }
+/* names sit at the foot of the block, so every block's text ends the same distance from its bottom */
+.search__cat-name,
+.search__caption { margin-top: auto; }
+.search__cat.is-active { background: rgba(255, 255, 255, .97); }
+.search__cat:hover .search__cat-name,
+.search__cat:focus-visible .search__cat-name,
+.search__cat.is-active .search__cat-name { text-decoration: underline; text-underline-offset: .2em; }
+.search__caption {
+  display: flex;
+  flex-direction: column;
+  gap: .1em;
+  font-size: .8em;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.search__item.is-picked { background: var(--fg); color: var(--bg); } /* already in the tin: opens its card */
+
+/* "Add …": a header and a full-width line under the grid, pinned to the list's foot while it scrolls */
+.search__row {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  padding: 0;
+  color: var(--fg);
+  text-align: left;
+}
+.search__foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 2; /* over the blocks' hairlines */
+  background: var(--bg); /* solid: the grid scrolls under it */
+}
+.search__grid + .search__foot { border-top: 1px solid var(--fg); }
+.search__add { background: var(--bg); }
+.search__add:hover,
+.search__add:focus-visible { background: var(--bg); }
+.search__add .search__names { flex: 1; }
+.search__add-icon {
+  flex: none;
+  align-self: center;
+  display: grid;
+  place-items: center;
+  width: 1.8em;
+  height: 1.8em;
+  margin-right: 1.1em;
+  border: 1px solid var(--fg);
+  border-radius: 50%;
+  font-size: 1.2em;
+  line-height: 1;
+  transition: background-color .15s, color .15s;
+}
+.search__add:hover .search__add-icon,
+.search__add:focus-visible .search__add-icon { background: var(--fg); color: var(--bg); }
+.search__thumb {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 4.4em;
+  height: 4.4em;
+  border-right: 1px solid var(--fg);
+}
+.search__noise { display: block; width: 100%; height: 100%; }
+.search__names {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: .1em;
+  min-width: 0;
+  padding: .4em 1.1em;
+}
+
+/* Continue's check: a small box over a dimmed screen */
+.confirm {
+  width: min(420px, calc(100vw - 32px));
+  margin: auto;
+  padding: 28px 28px 24px;
+  border: 1px solid var(--fg);
+  background: var(--bg);
+  color: var(--fg);
+}
+.confirm::backdrop { background: rgba(0, 0, 0, .35); }
+.confirm__text { margin: 0 0 24px; font-size: 16px; line-height: 1.45; text-wrap: balance; }
+.confirm__text > .bi__en { margin-top: .4em; }
+.confirm__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px; }
+.confirm__actions .btn { min-width: 0; padding: 10px 20px; }
+
+/* Debugging mode: a red switch, centred in the header row on every screen (bottom left on phones) */
+.debug-switch {
+  position: fixed;
+  z-index: 20;
+  top: calc(var(--topbar-pad) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  color: #d40000;
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.debug-switch .switch__track { border-color: currentColor; background: var(--bg); }
+.debug-switch .switch__track::after { background: currentColor; }
+.debug-switch input:checked + .switch__track { background: currentColor; }
+.debug-switch input:checked + .switch__track::after { background: var(--bg); }
+/* on the landing the scroll tip has the centre of the row: drop just under it */
+body:has(.screen--intro:not([hidden])) .debug-switch { top: calc(var(--topbar-pad) + 52px); }
+@media (max-width: 700px) {
+  .debug-switch, body:has(.screen--intro:not([hidden])) .debug-switch { top: auto; bottom: 8px; left: 8px; transform: none; }
+}
+
+/* ---------- pick screen: settings ---------- */
+
+/* In the header, beside Back. A category chip sits to the left of the button. */
+.tools {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tools__chips { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.tools__chips:empty { display: none; }
+/* Square, the same height as Back. White so the header's blend shows it as a black outline. */
+.tools__btn {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #fff;
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color .15s, color .15s;
+}
+.tools__btn svg { width: 52%; height: 52%; fill: currentColor; }
+.tools__btn:hover,
+.tools__btn[aria-expanded="true"] { background: #fff; color: #000; }
+.tools__btn:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+/* the switches, placed under the button from its box (app.js); kept out of the header's blend */
+.settings {
+  position: fixed;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--fg);
+  background: var(--bg);
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.settings .switch { justify-content: space-between; gap: 24px; }
+/* the mode: one of two, as radio buttons; a hairline under it */
+.settings__modes { display: flex; flex-direction: column; gap: 12px; }
+.settings__head { margin: 0 0 -2px; color: var(--muted); }
+.settings__mode { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.settings__mode input { flex: none; width: 15px; height: 15px; margin: 0; accent-color: var(--fg); cursor: pointer; }
+.settings__divider { width: 100%; margin: 0; border: 0; border-top: 1px solid var(--fg); }
+
+/* ---------- 4. about you ---------- */
+
+.demo {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 48px;
+}
+.demo__form {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin-top: clamp(24px, 8vh, 120px);
+  padding-bottom: 48px;
+}
+.demo__consents { display: flex; flex-direction: column; gap: 12px; }
+/* checkbox questions: the text on the left, the box at the right edge */
+.demo__consents .choice { flex-direction: row-reverse; justify-content: space-between; gap: 24px; }
+.field textarea {
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--fg);
+  background: transparent;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--fg);
+  border-radius: 0;
+  resize: vertical;
+}
+.field textarea:focus { outline: none; box-shadow: inset 0 0 0 1px var(--fg); }
+/* a page's note and questions, well apart; each page fades in */
+.demo__optional,
+.demo__group { display: flex; flex-direction: column; gap: 80px; }
+.demo__step:not([hidden]) { animation: step-in .35s ease both; }
+@keyframes step-in { from { opacity: 0; transform: translateY(8px); } }
+/* Back, Continue / Submit and the step counter, under the answers */
+.demo__nav { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.demo__nav .btn { min-width: 0; }
+.btn.btn--outline { background: transparent; color: var(--fg); }
+.btn.btn--outline:not(:disabled):hover { background: var(--fg); color: var(--bg); }
+.demo__msg { margin: -16px 0 0; font-size: 14px; line-height: 1.4; }
+.demo__msg:empty { display: none; }
+.demo__divider {
+  margin: 0 0 -4px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+/* ---------- 5. thanks ---------- */
+
+.thanks {
+  width: 100%;
+  max-width: 720px;
+  margin: clamp(48px, 20vh, 280px) auto 0;
+}
+.thanks .headline { margin-top: 0; }
+.thanks__actions { display: flex; flex-wrap: wrap; gap: 40px; margin-top: 64px; }
+.thanks__actions .btn { flex: 1 1 200px; }
+
+/* ---------- pick screen, cards up (#/details): the detail cards ---------- */
+
+/* The tin slides aside (--tin-shift, from app.js) and everything but it and what's in it steps
+   back; the column of cards comes in beside it. */
+.screen--pick.is-reviewing .stage { transform: translateX(var(--tin-shift, 0px)); pointer-events: none; }
+.screen--pick .topbar__actions,
+.stage .pick-tips,
+.stage .search,
+.stage .wedges,
+.stage .wedge-tags { transition: opacity .4s ease; }
+.screen--pick.is-reviewing .headline,
+.screen--pick.is-reviewing .topbar__actions,
+.is-reviewing .stage .pick-tips,
+.is-reviewing .stage .search,
+.is-reviewing .stage .wedges,
+.is-reviewing .stage .wedge-tags,
+.is-reviewing .stage .pill:not(.is-picked) { opacity: 0; pointer-events: none; }
+
+/* title, the stack, Back / Continue; left / top set in app.js (under the tin on narrow screens) */
+.picks {
+  position: absolute;
+  z-index: 4;
+  width: min(380px, calc(100% - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.picks:not([hidden]) { animation: picks-in .6s ease .45s both; } /* once the tin has moved */
+@keyframes picks-in { from { opacity: 0; transform: translateX(40px); } }
+.picks.is-below { left: 16px; right: 16px; width: auto; margin: 0 auto; max-width: 380px; }
+.picks__title { margin: 0; font-size: calc(var(--h1-size) * .75); font-weight: 400; line-height: 1.15; }
+.picks__title:lang(en) { font-family: "scatterplot-vf", var(--font); }
+.picks__title .bi__en { font-weight: 300; font-size: .92em; margin-top: .15em; }
+.picks__title :lang(zh) { font-family: var(--font); }
+.picks__nav { justify-content: flex-start; }
+.details { width: 100%; }
+
+/* All cards share one grid cell; the ones behind are nudged down-right by --depth. */
+.details__stack { display: grid; padding: 0 15px 15px 0; }
+.card {
+  grid-area: 1 / 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 26px 24px 20px;
+  background: #FBF4B0;
+  border: 1px solid var(--fg);
+  transform: translate(calc(var(--depth, 0) * 5px), calc(var(--depth, 0) * 5px));
+  transition: transform .2s;
+}
+.card:not(.is-front) > * { visibility: hidden; } /* only the front card's content shows */
+.card.is-buried { visibility: hidden; }
+
+.card__head { display: flex; align-items: center; gap: 14px; }
+.card__thumb {
+  flex: none;
+  width: 84px;
+  height: 84px; /* fixed square: tall cutouts mustn't stretch it */
+  padding: 8px;
+}
+.card__thumb img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.card__item { margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.card__item__zh { font-size: 20px; text-decoration: underline; text-underline-offset: 4px; } /* the Chinese name leads */
+.card__item__en { font-size: 14px; color: var(--muted); }
+.card .field__label { font-size: 14px; }
+.card__item,
+.card__count,
+.card .field__label,
+.card .card__input {
+  mix-blend-mode: multiply;
+}
+/* answers: one underlined line that wraps and grows (app.js fits the height, to the placeholder
+   while empty, so it's never cut off) */
+.card .card__input {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 2px solid var(--fg);
+  border-radius: 0;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.35;
+  resize: none;
+  overflow: hidden;
+}
+.card .card__input:focus { outline: none; box-shadow: none; }
+.card__head { cursor: default; }
+.card__count { margin: 0; font-size: 14px; text-align: center; font-variant-numeric: tabular-nums; } /* which card of how many */
+
+/* ---------- results page ---------- */
+
+a.btn { display: inline-block; text-align: center; text-decoration: none; }
+
+/* This page's header gets a solid white bar, edge to edge. The exclusion blend would turn
+   white into black, so it's switched off here and the colours are the plain ones. */
+.screen--results .topbar {
+  margin: 0 calc(-1 * var(--gutter));
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+  background: var(--bg);
+  color: var(--fg);
+  mix-blend-mode: normal;
+}
+.screen--results .topbar .btn.btn--outline { color: var(--fg); border-color: var(--fg); }
+.screen--results .topbar .btn.btn--outline:not(:disabled):hover { background: var(--fg); color: var(--bg); }
+.screen--results .topbar :focus-visible { outline-color: var(--fg); }
+
+.results { padding-bottom: 96px; }
+.results__intro { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: clamp(24px, 4vw, 56px); }
+.results__intro .headline { max-width: none; margin-top: 0; } /* the ∞ above already separates it from the header */
+/* the landing's dotted ∞ (infinity.js) over the title, at the same size as there.
+   Its canvas hangs .4em past this box, so the margin keeps the dots clear of the title. */
+.results__infinity {
+  position: relative;
+  height: .6em;
+  margin: 0 auto .75em;
+  font-size: calc(var(--h1-size) * 2);
+  line-height: 1;
+}
+.results__infinity canvas {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.results__msg { min-height: 1.3em; margin: 32px 0 0; color: var(--muted); text-align: center; } /* under the centred title */
+.results__msg:empty { min-height: 0; }
+.results__more { display: block; margin: 28px auto 0; font-size: 16px; }
+.results__more.bi > span { display: inline; }
+.results__more .bi__zh { margin-right: .5em; }
+
+/* cutout on its category colour (results.js thumb()) */
+.thumb {
+  position: relative;
+  display: block;
+  flex: none;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: var(--cat, var(--soft));
+}
+.thumb__noise { position: absolute; inset: 0; display: block; width: 100%; height: 100%; } /* a write-in's noise (noise.js) */
+.thumb img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; padding: 12%; } /* out of flow: the square sets the size, not the file */
+
+/* One block per person: a ruled header line, then their five picks as tiles in a row
+   (lines like the search list's grid). */
+.people { display: flex; flex-direction: column; gap: clamp(40px, 5vw, 72px); margin-top: clamp(32px, 4vw, 56px); }
+.person__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--fg);
+}
+.person__no { margin: 0; font-size: clamp(20px, 1.8vw, 28px); font-weight: 500; }
+.person__no.bi > span { display: inline; }
+.person__no .bi__zh { margin-right: .5em; }
+.person__no .bi__en { font-family: "scatterplot-vf", var(--font); font-weight: 300; }
+.person__nick { font-size: clamp(16px, 1.4vw, 22px); }
+.person__nick.bi > span { display: inline; }
+.person__nick .bi__zh { margin-right: .4em; }
+.person__nick--visitor { color: var(--muted); } /* no nickname given: "(访客 Visitor)" */
+.person__nick--visitor::before { content: "("; }
+.person__nick--visitor::after { content: ")"; }
+.person__date { margin-left: auto; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.person__you { padding: 0 8px; font-size: 13px; background: var(--fg); color: var(--bg); }
+.person__you.bi > span { display: inline; }
+.person__you .bi__zh { margin-right: .4em; }
+.person.is-mine .person__head { border-bottom-width: 3px; }
+
+.person__picks {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  border-left: 1px solid var(--fg);
+}
+.person__pick {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 14px 14px 18px;
+  border-right: 1px solid var(--fg);
+  border-bottom: 1px solid var(--fg);
+}
+.person.is-mine .person__pick { background: var(--sticky); }
+.person__img { width: 100%; margin-bottom: 6px; }
+.person__name { display: flex; flex-direction: column; gap: 2px; }
+.person__name__zh { font-size: 14px; color: var(--cat-deep, var(--muted)); }
+.person__name__zh [lang="en"] { margin-left: .4em; }
+.person__name__en { font-size: clamp(16px, 1.2vw, 19px); line-height: 1.2; color: var(--cat-deep, var(--muted)); } /* same colour as the Chinese name */
+.person__variation { font-size: 14px; }
+.person__variation::before { content: "→ "; color: var(--muted); }
+.person__reason { font-size: 14px; line-height: 1.35; color: var(--muted); }
+.person.is-mine .person__reason { color: #4a4a4a; }
+
+/* ---------- small screens ---------- */
+
+@media (max-width: 900px) {
+  :root { --intro-text: 16.2px; }
+  .demo { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .intro__sticker { --box: 72px; }
+  /* Keep cutouts clear of the paragraph: a row above it, a row below. */
+  .intro__sticker:nth-child(1) { left: 32%; top: 16%; }
+  .intro__sticker:nth-child(2) { left: 68%; top: 18%; }
+  .intro__sticker:nth-child(3) { left: 30%; top: 84%; }
+  .intro__sticker:nth-child(4) { left: 70%; top: 82%; }
+  .intro__sticker:nth-child(5) { left: 50%; top: 90%; }
+  .demo__form { grid-column: 1; margin-top: 8px; }
+  /* phones: each pick a row, cutout on the left */
+  .person__picks { grid-template-columns: minmax(0, 1fr); }
+  .person__pick { display: grid; grid-template-columns: 72px minmax(0, 1fr); column-gap: 14px; row-gap: 4px; align-content: start; padding: 12px; }
+  .person__img { grid-row: 1 / span 3; width: 72px; margin: 0; }
+  .btn { padding: 10px 20px; min-width: 0; }
+}
+
+/* ---------- pick screen: bottom controls + category wedges ---------- */
+
+/* Floating controls, styled like the pills: 13px text, 1px black outline, capsule shape. */
+.switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.switch__track {
+  position: relative;
+  flex: none;
+  width: 28px;
+  height: 16px;
+  border: 1px solid var(--fg);
+  border-radius: 999px;
+  background: var(--bg);
+  transition: background-color .2s;
+}
+.switch__track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--fg);
+  transition: transform .2s, background-color .2s;
+}
+.switch input:checked + .switch__track { background: var(--fg); }
+.switch input:checked + .switch__track::after { transform: translateX(12px); background: var(--bg); }
+.switch input:focus-visible + .switch__track { outline: 2px solid var(--fg); outline-offset: 3px; }
+
+/* selected category: a filled pill, like an item in the tin.
+   span.bi is inline-block and stacks the two languages; this chip keeps them on one line. */
+.cat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  padding: 6px 6px 6px 14px;
+  border: 1px solid var(--fg);
+  border-radius: 999px;
+  background: var(--fg);
+  color: var(--bg);
+  white-space: nowrap;
+}
+span.cat-chip.bi { display: inline-flex; }
+.cat-chip > .bi__zh,
+.cat-chip > .bi__en { display: inline; }
+.cat-chip__close {
+  font: inherit;
+  font-size: 15px;
+  line-height: 1;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0 6px;
+  cursor: pointer;
+}
+
+/* wedges sit behind the tin and pills; hover/click are handled on the stage */
+.wedges { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.wedge { fill: transparent; } /* never filled: hovering or picking a category only shows in the names round the tin */
+
+/* category headers: curved round the tin's rim on a solid white band (no rounded ends),
+   on a layer above the pills so they're never covered */
+.wedge-tags { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.wedge-ring { fill: none; stroke: var(--bg); } /* one solid white band all the way round, behind the names */
+.wedge-tag__band { fill: none; stroke: none; stroke-linecap: butt; }
+.wedge-tag__text { fill: var(--fg); font-family: var(--font); font-size: 13px; }
+.wedge-tag.is-hover .wedge-tag__text { text-decoration: underline; }
+.wedge-tag.is-selected .wedge-tag__band { stroke: var(--fg); }
+.wedge-tag.is-selected .wedge-tag__text { fill: var(--bg); }
+
+@media (max-width: 700px) {
+  .intro__launch { --stage-h: 2000px; } /* the pick screen is 2000px tall here */
+  .switch { gap: 8px; }
+  .screen--pick { height: 2000px; }
+  .pill { font-size: 12px; padding: 4px 12px; max-width: 130px; }
+  .pill__zh { font-size: 10px; }
+  .brand { font-size: 13px; }
+  .topbar .btn { padding: 8px 12px; font-size: 13px; }
+  .thanks__actions { gap: 16px; }
+}
+
+/* Leave-the-survey dialog (the logo, clicked mid-survey) */
+.leave {
+  width: min(440px, calc(100vw - 32px));
+  padding: 0;
+  border: 1px solid var(--fg);
+  border-radius: 0;
+  background: var(--bg);
+  color: var(--fg);
+}
+.leave::backdrop { background: rgb(0 0 0 / .45); }
+.leave__box { padding: clamp(24px, 4vw, 36px); }
+.leave__title { margin: 0; font-size: 22px; font-weight: 500; line-height: 1.25; }
+.leave__title .bi__en { font-family: "scatterplot-vf", var(--font); font-weight: 300; margin-top: .15em; }
+.leave__body { margin: 16px 0 28px; font-size: 15px; line-height: 1.5; }
+.leave__body .bi__en { margin-top: .2em; }
+.leave__actions { display: flex; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }
+.leave__actions .btn { min-width: 0; padding: 10px 22px; }
+.leave__actions .bi__en { margin-top: .1em; }

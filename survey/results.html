@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>∞ Underworld Supply Co. — Public results gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.typekit.net/fbo5bwn.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Everyone's submitted wishlists, read from Supabase (db.js). Text comes from content/*.js. -->
+  <div class="screen screen--results">
+    <header class="topbar">
+      <a class="brand" href="index.html" data-t="brand"></a>
+      <div class="topbar__actions">
+        <a class="btn btn--outline" href="index.html" data-t="results.takeSurvey"></a>
+      </div>
+    </header>
+
+    <main class="results">
+      <div class="results__intro">
+        <h1 class="headline" id="results-headline" data-t="results.headline"></h1>
+      </div>
+
+      <p class="results__msg" id="results-msg" role="status" aria-live="polite"></p>
+
+      <!-- one block per person, newest first -->
+      <div class="people" id="people"></div>
+      <button class="link results__more" type="button" id="more" hidden></button>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="config.js"></script>
+  <script src="db.js"></script>
+  <script src="content/en.js"></script>
+  <script src="content/zh.js"></script>
+  <script src="content/images.js"></script>
+  <script src="noise.js"></script>
+  <script src="infinity.js"></script>
+  <script src="results.js"></script>
+</body>
+</html>
