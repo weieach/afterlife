@@ -694,28 +694,30 @@ html.is-snapping { scroll-snap-type: y mandatory; }
   font-size: var(--intro-text); /* the landing body text */
   line-height: 1.3;
 }
-/* "Clear screen": underlined text in the strip under the field */
+/* "Clear screen": a square × button just right of the field, drawn like the settings button
+   (outline, icon in the middle, fills on hover) with the field's border, as tall as the field
+   (its text line + padding + borders). app.js leaves room for it (CLEAR_GAP). */
 .search__clear {
+  --size: calc(var(--intro-text) * 2.3 + 6px);
   position: absolute;
-  top: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 0;
+  left: calc(100% + 8px);
+  display: grid;
+  place-items: center;
+  width: var(--size);
+  height: var(--size);
   margin: 0;
   padding: 0;
-  border: 0;
-  background: none;
+  border: 3px solid var(--fg);
+  border-radius: 0;
+  background: var(--bg);
   color: var(--fg);
-  font: inherit;
-  font-size: 13px;
-  line-height: 1.2;
-  white-space: nowrap;
-  text-decoration: underline;
-  text-underline-offset: 3px;
   cursor: pointer;
+  transition: background-color .15s, color .15s;
 }
-.search__clear > .bi__zh,
-.search__clear > .bi__en { display: inline; }
-.search__clear > .bi__zh::after { content: '\00a0'; } /* a space inside the underline: one line under both */
+.search__clear svg { width: 46%; height: 46%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: square; }
+.search__clear:hover { background: var(--fg); color: var(--bg); }
+.search__clear:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
 .search__field::placeholder { color: var(--fg); opacity: .45; transition: opacity .2s; }
 .search__field:focus { outline: none; }
 .search__field:focus::placeholder { opacity: .25; } /* active: the hint steps back further */

@@ -2244,8 +2244,10 @@
     }
 
     // The field sits near the bottom, a little wider than the tin (on tall phone layouts, just
-    // under the tin). A wall keeps the capsules from hiding behind it while search is open.
+    // under the tin), with the × (Clear screen) just right of it. A wall keeps the capsules
+    // from hiding behind them while search is open.
     const ROW_PAD = 30;
+    const CLEAR_GAP = 8; // px between the field and the ×, as in style.css
     let searchWall = null;
     const wallOpts = { isStatic: true, collisionFilter: { group: 0, category: CAT.DISK, mask: CAT.OUT } };
     function placeSearch() {
@@ -2253,19 +2255,21 @@
       searchWall = null;
       if (!W) return;
       const fieldH = searchField.offsetHeight || 68;
-      let width = Math.min(W - 32, Math.max(300, Math.round(2.2 * R)));
-      let left = cx - width / 2;
+      const side = CLEAR_GAP + fieldH; // the × is square, as tall as the field
+      let width = Math.min(W - 32 - side, Math.max(300, Math.round(2.2 * R)));
+      let left = cx - width / 2; // the field stays centred under the tin; the × hangs off its right
       if (left < 16) left = 16;
-      if (left + width > W - 16) { width = W - 32; left = 16; }
+      if (left + width + side > W - 16) { width = W - 32 - side; left = 16; }
       const bottom = H > window.innerHeight ? Math.min(H - ROW_PAD, cy + R + 32 + fieldH) : H - ROW_PAD;
       Object.assign(searchEl.style, { width: `${width}px`, left: `${left}px`, bottom: `${H - bottom}px` });
       if (!searchMode) return;
       const stageRect = stage.getBoundingClientRect();
       const fieldRect = searchField.getBoundingClientRect();
+      const wallW = fieldRect.width + side; // the field and the ×
       searchWall = Bodies.rectangle(
-        fieldRect.left - stageRect.left + fieldRect.width / 2,
+        fieldRect.left - stageRect.left + wallW / 2,
         fieldRect.top - stageRect.top + fieldRect.height / 2,
-        fieldRect.width + 2 * GAP,
+        wallW + 2 * GAP,
         fieldRect.height + 2 * GAP,
         wallOpts,
       );
@@ -2315,12 +2319,13 @@
       showMatches(); // after the drop, or this would pop them in beside the tin instead
     }
 
-    // "Clear screen", under the field: shown while anything loose is on screen. Everything loose
-    // drops out through the floor (what's in the tin stays), and the board starts empty again.
+    // "Clear screen", the × right of the field: shown while anything loose is on screen. Everything
+    // loose drops out through the floor (what's in the tin stays), and the board starts empty again.
     const clearBtn = $('#search-clear');
     function syncClear() {
       const any = searchMode && !burning && pills.some((p) => !p.filtered && !picks.includes(p) && p.mode !== 'exit');
       if (clearBtn.hidden === any) clearBtn.hidden = !any;
+      if (any && !clearBtn.title) clearBtn.title = clearBtn.getAttribute('aria-label') || ''; // "清空屏幕 / Clear screen" on hover
     }
     clearBtn.addEventListener('click', () => {
       dropCat = null;

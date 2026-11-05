@@ -99,8 +99,10 @@
         <div class="search__list" id="search-list" hidden></div>
         <input class="search__field" id="search-field" type="text" autocomplete="off" spellcheck="false"
                data-t-placeholder="pick.searchPlaceholder" data-t-aria="pick.search">
-        <!-- under the field, only while there are loose items on screen: drops them all out -->
-        <button class="search__clear" type="button" id="search-clear" data-t="pick.clear" hidden></button>
+        <!-- right of the field, only while there are loose items on screen: drops them all out -->
+        <button class="search__clear" type="button" id="search-clear" data-t-aria="pick.clear" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>
+        </button>
       </div>
     </div>
 
