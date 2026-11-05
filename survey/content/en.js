@@ -102,12 +102,14 @@ window.SURVEY_CONTENT.en = {
       '55-64': '55–64',
       '65-plus': '65 or older',
     },
-    heritage: 'Do you identify as Chinese or of Chinese heritage?',
+    heritage: 'Which of the following best describes your cultural background?',
+    // saved in `heritage`; older responses may hold 'born-in-china' (born and raised there, wherever they live now)
     heritageOptions: {
-      'born-in-china': 'Yes — Born and raised in Greater China (Mainland, HK, Macao, Taiwan)',
-      'first-gen': 'Yes — First-generation living abroad (including study, work, or immigration)',
-      'second-gen-plus': 'Yes — Second-generation or later diaspora (born or raised abroad)',
-      'none': 'No — I do not identify as of Chinese heritage',
+      'in-greater-china': 'Born, raised, and currently living in Greater China (Mainland, HK, Macao, Taiwan)',
+      'first-gen': 'Born and raised in Greater China, currently living abroad (first-generation)',
+      'second-gen-plus': 'Chinese diaspora born or raised outside Greater China (second-generation or later)',
+      'other-heritage': 'Other Chinese heritage or cross-cultural background',
+      'none': 'I do not identify as of Chinese heritage',
     },
     residence: 'Where do you currently live?',
     residenceOptions: {

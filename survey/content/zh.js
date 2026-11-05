@@ -102,12 +102,13 @@ window.SURVEY_CONTENT.zh = {
       '55-64': '55–64岁',
       '65-plus': '65岁及以上',
     },
-    heritage: '你是否有华人或华裔文化背景？',
+    heritage: '以下哪项最符合你的文化与成长背景？',
     heritageOptions: {
-      'born-in-china': '是 —— 在大中华区出生并长大',
-      'first-gen': '是 —— 第一代移居海外（包括留学、工作或定居）',
-      'second-gen-plus': '是 —— 第二代或更晚的海外华裔（在海外出生或长大）',
-      'none': '否 —— 我没有华人或华裔背景',
+      'in-greater-china': '在大中华区（大陆、港澳台）出生长大，目前仍在此生活',
+      'first-gen': '在大中华区出生长大，目前在海外留学、工作或定居（第一代移居）',
+      'second-gen-plus': '在海外出生或长大的华裔（第二代或更晚的海外华裔）',
+      'other-heritage': '其他华人/华裔背景（如跨国成长、回流等）',
+      'none': '我没有华人或华裔背景',
     },
     residence: '你目前居住在哪里？',
     residenceOptions: {
