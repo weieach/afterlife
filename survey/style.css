@@ -543,12 +543,10 @@ html.is-snapping { scroll-snap-type: y mandatory; }
 }
 .pill.as-image .pill__en,
 .pill.as-image .pill__zh { display: none; }
-/* "Show image": the names sit under the cutout, no capsule (unless they ring it, picked from the list) */
+/* "Show image": the names sit under the cutout, no capsule */
 .pill.as-thumb { gap: 3px; }
 .pill.as-thumb .pill__en,
 .pill.as-thumb .pill__zh { max-width: 140px; }
-.pill.as-thumb:has(> .pill__ring) .pill__en,
-.pill.as-thumb:has(> .pill__ring) .pill__zh { display: none; }
 /* "Show image not text": loose items with a cutout show it instead of their name */
 .pill__thumb { display: block; pointer-events: none; filter: drop-shadow(0 3px 8px rgba(0, 0, 0, .08)); transition: filter .15s; } /* wide, soft and light */
 /* categorization: hovering a wedge fades everything outside it; picking one hides the rest */
@@ -660,24 +658,6 @@ html.is-snapping { scroll-snap-type: y mandatory; }
 .pick-tip::before { content: ''; position: absolute; border: 6px solid transparent; }
 .pick-tips.is-side .pick-tip::before { right: 100%; top: 50%; margin-top: -6px; border-right-color: var(--fg); }
 .pick-tips.is-above .pick-tip:last-child::before { top: 100%; left: 50%; margin-left: -6px; border-top-color: var(--fg); }
-
-/* picked from the search list: the item's names ring its cutout for a moment (built in app.js) */
-.pill__ring {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  overflow: visible;
-  pointer-events: none;
-}
-.pill__ring text {
-  font-family: var(--font);
-  fill: var(--fg);
-  stroke: var(--bg);
-  stroke-width: 3px;
-  stroke-linejoin: round;
-  paint-order: stroke fill;
-}
 
 /* ---------- pick screen: search mode ---------- */
 

@@ -1131,7 +1131,7 @@
       p.asImage = !!img;
       p.img = img || null;
       p.el.classList.toggle('as-image', p.asImage);
-      p.el.querySelectorAll('.pill__img, .pill__flames, .pill__ring').forEach((el) => el.remove());
+      p.el.querySelectorAll('.pill__img, .pill__flames').forEach((el) => el.remove());
       if (img) {
         const w = p.imgW || Math.round(R * 0.66); // a custom item keeps its capsule's width
         const h = Math.round((w * img.naturalHeight) / img.naturalWidth);
@@ -1145,7 +1145,6 @@
         el.style.height = `${h}px`;
         p.el.prepend(el);
         if (flames) p.el.append(flames);
-        if (p.searched) surround(p, false);
       }
       if (running) fitBody(p);
       else stale = true;
@@ -1210,7 +1209,6 @@
       const gone = () => p.el.classList.add('is-leaving');
       if (calm.matches) return Promise.resolve(gone());
       if (p.asImage) {
-        p.el.querySelector('.pill__ring')?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 600, fill: 'forwards' });
         if (p.burnOut) return p.burnOut(BURN_OUT).then(gone);
         gone(); // cutout couldn't be read (file://): just fade
         return new Promise((r) => setTimeout(r, 400));
@@ -1789,7 +1787,7 @@
     }
 
     // Chosen from the search list: it pops up just outside the tin (as its cutout, names
-    // ringed round it, when it has one) and waits there to be dragged in.
+    // under it, when it has one) and waits there to be dragged in.
     async function place(p) {
       p.searched = true;
       p.el.getAnimations().forEach((a) => a.cancel()); // e.g. halfway through popping out of view
@@ -1808,7 +1806,6 @@
       }
       setMode(p, 'out');
       popIn(p);
-      if (p.thumb) surround(p, true);
     }
 
     const POP = 'cubic-bezier(.34, 1.56, .64, 1)'; // overshoots a little, then settles
@@ -1822,38 +1819,6 @@
       if (calm.matches) return hide();
       if (p.el.getAnimations().some((a) => a.id === 'pop-out')) return; // already on its way out
       p.el.animate([{ scale: 1, opacity: 1 }, { scale: 0, opacity: 0 }], { id: 'pop-out', duration: 220, easing: 'ease-in' }).finished.then(hide, () => {}); // cancelled: shown again
-    }
-
-    // Chosen from the search list: its names ring its cutout from then on, outside the tin and
-    // in it (English over the top, Chinese under the bottom). Redrawn whenever the cutout is.
-    function surround(p, animate) {
-      p.el.querySelector('.pill__ring')?.remove();
-      const img = p.el.querySelector('.pill__img, .pill__thumb');
-      if (!img) return;
-      const [en, zh] = namesFor(p);
-      const FS = 15;
-      const r = Math.max(parseFloat(img.style.width), parseFloat(img.style.height)) / 2 + 6;
-      const c = r + FS * 2.5, size = 2 * c;
-      const ring = svg('svg', { class: 'pill__ring', width: size, height: size, viewBox: `0 0 ${size} ${size}`, 'aria-hidden': 'true' });
-      p.el.append(ring);
-      [[en, r + 4, 1], [zh, r + FS + 2, 0]].forEach(([text, rb, top], i) => {
-        if (!text) return;
-        const id = `ring-${p.id || 'other'}-${i}`;
-        // left to right either way, so neither name reads upside down
-        ring.append(svg('path', { id, d: `M${c - rb},${c} A${rb},${rb} 0 0 ${top} ${c + rb},${c}`, fill: 'none' }));
-        const el = svg('text', { 'font-size': FS });
-        const run = svg('textPath', { href: `#${id}`, startOffset: '50%', 'text-anchor': 'middle' });
-        run.textContent = text;
-        el.append(run);
-        ring.append(el);
-        const room = Math.PI * rb * 0.92, len = el.getComputedTextLength();
-        if (len > room) el.setAttribute('font-size', (FS * room) / len); // long names shrink to fit the half circle
-      });
-      if (!animate || calm.matches) return;
-      ring.animate([
-        { opacity: 0, transform: 'translate(-50%, -50%) scale(.6) rotate(-25deg)' },
-        { opacity: 1, transform: 'translate(-50%, -50%) scale(1) rotate(0deg)' },
-      ], { duration: 650, delay: 120, easing: POP, fill: 'backwards' });
     }
 
     // Clicked: picked, if it isn't already. Its card waits for the next screen.
@@ -2140,7 +2105,6 @@
         if (!p.thumb) return Promise.resolve();
         p.thumb.remove();
         p.thumb = null;
-        if (!p.asImage) p.el.querySelector('.pill__ring')?.remove();
         p.el.classList.remove('as-thumb');
         if (running) fitBody(p);
         else stale = true;
@@ -2159,7 +2123,6 @@
         sizeThumb(p);
         p.el.prepend(el);
         p.el.classList.add('as-thumb');
-        if (p.searched) surround(p, false);
         if (running) fitBody(p);
         else stale = true;
       });
@@ -2179,7 +2142,6 @@
       for (const p of pills) {
         if (picks.includes(p)) continue;
         sizeThumb(p);
-        if (p.thumb && p.searched) surround(p, false);
         fitBody(p);
       }
     }
