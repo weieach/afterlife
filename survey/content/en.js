@@ -160,7 +160,7 @@ window.SURVEY_CONTENT.en = {
     { id: 'wealth', name: 'Wealth' }, // gold, ingots, hell money, the money tree, ATM
     { id: 'food', name: 'Food' },
     { id: 'vices', name: 'Alcohol, cigarettes & tea' },
-    { id: 'assistants', name: 'Assistants' }, // the AI robot and servants
+    { id: 'assistants', name: 'Assistants' }, // the AI robot and household staff
     { id: 'misc', name: 'Miscellaneous' }, // garden, gas station, ID, bikes, tricycle, theater, kitchen
   ],
 
@@ -258,7 +258,7 @@ window.SURVEY_CONTENT.en = {
 
     // assistants
     { id: 'ai-robot', name: 'AI robot', category: 'assistants', example: 'Robot butler' },
-    { id: 'servants', name: 'Servants', category: 'assistants', example: 'Personal chef' },
+    { id: 'servants', name: 'Household staff', category: 'assistants', example: 'Personal chef' }, // id kept: saved answers and the cutout use it
 
     // misc
     { id: 'theater', name: 'Traditional Chinese theater', category: 'misc', example: 'Peking opera troupe' },
