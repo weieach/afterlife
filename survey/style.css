@@ -1253,7 +1253,6 @@ a.btn { display: inline-block; text-align: center; text-decoration: none; }
   border-right: 1px solid var(--fg);
   border-bottom: 1px solid var(--fg);
 }
-.person.is-mine .person__pick { background: var(--sticky); }
 .person__img { width: 100%; margin-bottom: 6px; }
 .person__name { display: flex; flex-direction: column; gap: 2px; }
 .person__name__zh { font-size: 14px; color: var(--cat-deep, var(--muted)); }
@@ -1262,7 +1261,6 @@ a.btn { display: inline-block; text-align: center; text-decoration: none; }
 .person__variation { font-size: 14px; }
 .person__variation::before { content: "→ "; color: var(--muted); }
 .person__reason { font-size: 14px; line-height: 1.35; color: var(--muted); }
-.person.is-mine .person__reason { color: #4a4a4a; }
 
 /* ---------- small screens ---------- */
 

@@ -124,6 +124,7 @@ window.SURVEY_CONTENT.zh = {
       'tried-before': '尝试过一两次',
       never: '从来没有',
     },
+    afterlife: '你相信有死后的世界吗？如果你相信，你心目中的那个世界是什么样的？',
   },
 
   thanks: {

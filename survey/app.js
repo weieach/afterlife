@@ -568,9 +568,11 @@
 
   // Every step has its own address after the # (so it works on any static host, and reload,
   // back and forward all land on the right step): no hash = intro, #/pick,
-  // #/details (a card for each pick), #/about/1 (the four required questions together),
+  // #/details (a card for each pick), #/about/1 (the five required questions together),
   // #/about/2 (sharing choices and last thoughts, with Submit), #/thanks.
   // #/details has no section of its own: it's the pick screen with the tin aside and the cards up.
+  // #/start (the results page's "Take the survey") is a fresh start: it lands on #/pick and plays
+  // the same entrance as the intro's Start.
   const SCREENS = [...screens.map((s) => s.dataset.screen), 'details'];
   const sectionOf = (name) => (name === 'details' ? 'pick' : name);
   function urlFor(name, step) {
@@ -590,7 +592,8 @@
   // nothing picked yet -> pick; a question left blank -> that question; already sent -> thanks.
   function route({ initial = false } = {}) {
     const [, want, n] = location.hash.match(/^#\/?([^/]*)\/?(\d*)/) || [];
-    let name = SCREENS.includes(want) ? want : 'intro';
+    const fresh = want === 'start';
+    let name = fresh ? 'pick' : SCREENS.includes(want) ? want : 'intro';
     let step = parseInt(n, 10) || 1;
     if (name === 'about' && submitted) name = 'thanks';
     if (name === 'thanks' && !submitted) name = 'about';
@@ -598,19 +601,23 @@
     if (name === 'about') step = clampStep(step);
     const url = urlFor(name, step);
     if (here() !== url) history.replaceState(null, '', url);
-    show(name, step, initial);
+    show(name, step, initial, fresh);
   }
   window.addEventListener('popstate', () => route());
 
-  function show(name, step, initial) {
+  function show(name, step, initial, fresh = false) {
     if (name === 'about') showStep(step);
     if (name === screenNow && !initial) return;
     const from = screenNow;
     screenNow = name;
     if (from === 'pick' && name === 'intro') picker.reset(); // Back from the pick screen starts the picks over
-    const entering = name === 'pick' && from === 'intro' && !initial && !calm.matches;
-    if (entering) $('[data-screen="pick"]').classList.add('is-entering'); // before it shows: no flash
-    const tin = entering ? liftTin() : null; // before the intro hides
+    const entering = name === 'pick' && from === 'intro' && (!initial || fresh) && !calm.matches;
+    const title = $('[data-screen="pick"] .headline');
+    if (entering) {
+      $('[data-screen="pick"]').classList.add('is-entering'); // before it shows: no flash
+      if (initial) title.style.opacity = '0'; // hidden until the web fonts are in (below)
+    }
+    const tin = entering && !initial ? liftTin() : null; // before the intro hides
     screens.forEach((s) => { s.hidden = s.dataset.screen !== sectionOf(name); });
     window.scrollTo(0, 0);
     if (name === 'intro') intro.start();
@@ -620,7 +627,10 @@
     picker.review(name === 'details');
     if (name === 'details') details.show(from === 'about');
     else details.hide();
-    if (entering) pickEntrance(tin);
+    // Straight from another page, the title is measured once its web font has loaded, so it
+    // floats from (and lands on) the right spot.
+    if (entering && initial) (document.fonts?.ready || Promise.resolve()).then(() => pickEntrance(null));
+    else if (entering) pickEntrance(tin);
   }
 
   // The landing's tin, copied out of the intro onto the page exactly as it looks right now
@@ -2732,6 +2742,42 @@
         renderChips();
         renderSearch();
       },
+      // Picks saved before a reload, put straight back in the tin with their answers (no tips,
+      // no glide). The ones that had burnt are burnt again, without the flames.
+      restorePicks(saved) {
+        for (const s of saved) {
+          if (picks.length >= MAX_PICKS) break;
+          let p;
+          if (s.other) {
+            p = spareOther() || createPill({ other: true });
+            p.customName = s.customName || '';
+            p.el.classList.toggle('is-cast', !!p.customName); // a typed-in item's look, for its snapshot
+            relabel(p);
+          } else {
+            p = pills.find((q) => q.id === s.id && !q.other);
+          }
+          if (!p || picks.includes(p)) continue;
+          if (p.filtered) {
+            p.el.classList.remove('is-filtered-out');
+            fitBody(p);
+            p.filtered = false;
+            Composite.add(world, p.body);
+          }
+          p.variation = s.variation || '';
+          p.reason = s.reason || '';
+          tipsShown.add(p.other ? 'customTip' : 'tip');
+          pick(p);
+          Body.setPosition(p.body, p.target);
+          Body.setVelocity(p.body, { x: 0, y: 0 });
+          setMode(p, 'in');
+          if (s.ashed) {
+            p.ashed = true;
+            p.el.classList.add('is-leaving');
+          }
+        }
+        if (picks.length) searchStarted = true;
+        refresh();
+      },
       unpick,
       relabel,
       refresh,
@@ -2918,9 +2964,12 @@
     }
 
     // The cards screen opens on the first pick (on the last, coming back from the questions).
+    let resumeAt = null; // the card that was up before a reload
     function show(atEnd = false) {
       column.hidden = false;
-      active = atEnd ? Math.max(0, order.length - 1) : 0;
+      active = resumeAt ?? (atEnd ? Math.max(0, order.length - 1) : 0);
+      active = Math.min(active, Math.max(0, order.length - 1));
+      resumeAt = null;
       render();
       place();
       if (column.classList.contains('is-below')) { // tall phone layout: bring the tin into view, cards under it
@@ -2982,7 +3031,11 @@
     $('#details-back').addEventListener('click', back);
     nextBtn.addEventListener('click', next);
 
-    return { add, remove, clear, show, hide, syncNext };
+    return {
+      add, remove, clear, show, hide, syncNext,
+      at: () => active,
+      resume(i) { resumeAt = Number.isInteger(i) ? i : null; },
+    };
   })();
 
   /* ---------- 3. about you (one question at a time) ---------- */
@@ -3006,10 +3059,11 @@
   function answered(n) {
     if (debug) return true; // debugging: blanks are let through
     switch (n) {
-      case 1: return !!form.elements.age.value // the four required questions, all on page 1
+      case 1: return !!form.elements.age.value // the five required questions, all on page 1
         && anyChecked('heritage')
         && anyChecked('residence') && (!abroad.checked || !!country.value.trim())
-        && anyChecked('burning');
+        && anyChecked('burning')
+        && !!form.elements.afterlife.value.trim();
       default: return true;
     }
   }
@@ -3075,6 +3129,7 @@
       residence: data.get('residence'),
       country: abroad.checked ? text('country') : null,
       burning: data.get('burning'),
+      afterlife: text('afterlife'), // private, like the rest of page 1
       nickname: text('nickname'), // shown in the gallery
       publish: data.get('publish') === 'on',
       share_custom: hasCustom() ? data.get('shareCustom') === 'on' : null,
@@ -3110,6 +3165,7 @@
     formMsg.textContent = '';
     syncForm();
     submitted = false;
+    forgetProgress();
     go('intro');
   }
 
@@ -3138,6 +3194,67 @@
     if (e.target === leaveDialog) leaveDialog.close('stay');
   });
 
+  /* ---------- progress: kept through a reload ---------- */
+
+  // The picks (with their card answers), the card that was up, the survey answers and whether
+  // they were sent, saved in this tab whenever the page is put away or reloaded. Closing the
+  // tab, or starting over, forgets them; nothing here leaves the browser.
+  const PROGRESS_KEY = 'afterlife-survey-progress';
+
+  function forgetProgress() {
+    try { sessionStorage.removeItem(PROGRESS_KEY); } catch (_) { /* storage unavailable */ }
+  }
+
+  function saveProgress() {
+    const picks = picker.picks();
+    if (!picks.length && !submitted) return forgetProgress();
+    const fields = {};
+    for (const el of form.elements) {
+      if (!el.name) continue;
+      if (el.type === 'checkbox' || el.type === 'radio') {
+        fields[el.name] ||= [];
+        if (el.checked) fields[el.name].push(el.value);
+      } else if (el.type !== 'submit' && el.type !== 'button') {
+        fields[el.name] = el.value;
+      }
+    }
+    const progress = {
+      picks: picks.map((p) => ({
+        id: p.id, other: p.other, customName: p.customName, variation: p.variation, reason: p.reason, ashed: !!p.ashed,
+      })),
+      card: details.at(),
+      fields,
+      submitted,
+    };
+    try { sessionStorage.setItem(PROGRESS_KEY, JSON.stringify(progress)); } catch (_) { /* storage unavailable */ }
+  }
+  addEventListener('pagehide', saveProgress);
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; // each screen sets its own scroll
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveProgress(); });
+
+  function loadProgress() {
+    let saved = null;
+    try { saved = JSON.parse(sessionStorage.getItem(PROGRESS_KEY)); } catch (_) { /* storage unavailable or garbled */ }
+    // back on the landing, or "Take the survey" from the results page: a fresh start
+    if (!saved || !location.hash || /^#\/?start\b/.test(location.hash)) return forgetProgress();
+    submitted = !!saved.submitted;
+    for (const el of form.elements) {
+      const value = saved.fields?.[el.name];
+      if (value === undefined) continue; // a question added since: its default
+      if (el.type === 'checkbox' || el.type === 'radio') el.checked = value.includes(el.value);
+      else if (el.type !== 'submit' && el.type !== 'button') el.value = value;
+    }
+    if (saved.picks?.length) {
+      // the pills are measured as they're made, so the pick screen shows for a moment (unpainted)
+      const pickScreen = $('[data-screen="pick"]');
+      screens.forEach((s) => { s.hidden = s !== pickScreen; });
+      picker.start();
+      picker.restorePicks(saved.picks);
+      picker.stop();
+      if (location.hash.startsWith('#/details')) details.resume(saved.card);
+    }
+  }
+
   /* ---------- text ---------- */
 
   // Fill data-t / data-t-placeholder / data-t-aria under root (cloned cards call this too).
@@ -3161,6 +3278,7 @@
   applyText(document);
   intro.render();
   picker.relabelAll();
+  loadProgress();
   syncForm();
   route({ initial: true });
 })();

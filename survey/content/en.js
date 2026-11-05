@@ -125,6 +125,7 @@ window.SURVEY_CONTENT.en = {
       'tried-before': 'I’ve tried it out before',
       never: 'Never',
     },
+    afterlife: 'What do you believe happens after we die? If you picture an “underworld” or afterlife, what does it look like to you?',
   },
 
   thanks: {

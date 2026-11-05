@@ -31,6 +31,7 @@ create table if not exists public.submissions (
   residence   text check (length(residence) <= 40),
   country     text check (length(country) <= 200), -- where abroad, when residence is overseas
   burning     text check (length(burning) <= 20), -- every-year / occasionally / tried-before / never
+  afterlife   text check (length(afterlife) <= 4000), -- what they believe happens after we die
 
   -- the last page: show on the public results page? (null on older responses: shown)
   publish     boolean,
@@ -48,6 +49,7 @@ create table if not exists public.submissions (
 -- Added after the table was first created; safe to re-run.
 alter table public.submissions
   add column if not exists burning text check (length(burning) <= 20),
+  add column if not exists afterlife text check (length(afterlife) <= 4000),
   add column if not exists publish boolean,
   add column if not exists country text check (length(country) <= 200),
   add column if not exists nickname text check (length(nickname) <= 60),

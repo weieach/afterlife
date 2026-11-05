@@ -151,11 +151,11 @@
         <button class="btn" type="submit" form="demo-form" id="demo-next" disabled></button>
       </div>
     </header>
-    <!-- Two pages: the four required questions together (#/about/1), then sharing choices and
+    <!-- Two pages: the five required questions together (#/about/1), then sharing choices and
          last thoughts, with Submit (#/about/2). -->
     <div class="demo">
       <form class="demo__form" id="demo-form" novalidate>
-        <!-- page 1: what the answers are for, then the four required questions -->
+        <!-- page 1: what the answers are for, then the five required questions -->
         <div class="demo__group demo__step" data-step="1">
           <p class="demo__divider" data-t="about.researchNote"></p>
 
@@ -201,6 +201,10 @@
             <label class="choice"><input type="radio" name="burning" value="tried-before"> <span data-t="about.burningOptions.tried-before"></span></label>
             <label class="choice"><input type="radio" name="burning" value="never"> <span data-t="about.burningOptions.never"></span></label>
           </fieldset>
+          <label class="field">
+            <span class="field__label" data-t="about.afterlife"></span>
+            <textarea name="afterlife" rows="4" maxlength="4000" required></textarea>
+          </label>
         </div>
 
         <!-- the last page (Submit is here): about the public gallery, a nickname for it, what may
