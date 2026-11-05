@@ -133,7 +133,7 @@
           <textarea class="card__input" name="variation" rows="1" data-t-placeholder="details.variationPlaceholder"></textarea>
         </label>
         <label class="field">
-          <span class="field__label is-required" data-t="details.reason"></span>
+          <span class="field__label" data-t="details.reason"></span>
           <textarea class="card__input" name="reason" rows="1" data-t-placeholder="details.reasonPlaceholder"></textarea>
         </label>
         <p class="card__count"></p>
@@ -151,11 +151,11 @@
         <button class="btn" type="submit" form="demo-form" id="demo-next" disabled></button>
       </div>
     </header>
-    <!-- Two pages: the five required questions together (#/about/1), then sharing choices and
+    <!-- Two pages: the four required questions and the optional afterlife one (#/about/1), then sharing choices and
          last thoughts, with Submit (#/about/2). -->
     <div class="demo">
       <form class="demo__form" id="demo-form" novalidate>
-        <!-- page 1: what the answers are for, then the five required questions -->
+        <!-- page 1: what the answers are for, then the four required questions and the optional afterlife one -->
         <div class="demo__group demo__step" data-step="1">
           <p class="demo__divider" data-t="about.researchNote"></p>
 
@@ -202,8 +202,8 @@
             <label class="choice"><input type="radio" name="burning" value="never"> <span data-t="about.burningOptions.never"></span></label>
           </fieldset>
           <label class="field">
-            <span class="field__label is-required" data-t="about.afterlife"></span>
-            <textarea name="afterlife" rows="4" maxlength="4000" required></textarea>
+            <span class="field__label" data-t="about.afterlife"></span> <!-- optional -->
+            <textarea name="afterlife" rows="4" maxlength="4000"></textarea>
           </label>
         </div>
 

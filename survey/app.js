@@ -594,7 +594,7 @@
 
   // Every step has its own address after the # (so it works on any static host, and reload,
   // back and forward all land on the right step): no hash = intro, #/pick,
-  // #/details (a card for each pick), #/about/1 (the five required questions together),
+  // #/details (a card for each pick), #/about/1 (the four required questions and the afterlife one),
   // #/about/2 (sharing choices and last thoughts, with Submit), #/thanks.
   // #/details has no section of its own: it's the pick screen with the tin aside and the cards up.
   // #/start (the results page's "Take the survey") is a fresh start: it lands on #/pick and plays
@@ -2784,8 +2784,8 @@
 
   /* ---------- detail cards: one per picked item, made as it's picked. On the cards screen
      (#/details) the tin slides aside and they stack beside it, one card at a time: Continue
-     moves to the next (the why is required, the variation optional), Back to the one before.
-     Each pick burns away in the tin once its card is filled in. ---------- */
+     moves to the next (both answers optional; an unnamed "Other" needs its name), Back to the one
+     before. Each pick burns away in the tin once its card is filled in, or on Continue. ---------- */
 
   const details = (() => {
     const column = $('#picks');
@@ -2850,8 +2850,8 @@
     }
 
     const filled = (p) => !!(p.variation.trim() || p.reason.trim() || (p.other && p.customName));
-    // required on each card: why it was picked (and what it is, for an unnamed "Other"); not while debugging
-    const ready = (p) => debug || (!!p.reason.trim() && (!p.other || !!p.customName));
+    // required on a card: only what it is, for an unnamed "Other" (the why is optional); not while debugging
+    const ready = (p) => debug || !p.other || !!p.customName;
 
     // An answer's height fits its text, or its placeholder while it's empty.
     function fit(el) {
@@ -2909,11 +2909,11 @@
       else if (active >= order.length) active = Math.max(0, order.length - 1);
     }
 
-    // Continue: the next card (this one's pick burns now, if it hasn't yet); after the last, on.
+    // Continue: the next card (this one's pick burns now, if it hasn't yet, answered or not); after the last, on.
     function next() {
       const p = order[active];
       if (leaving || !p || !ready(p)) return;
-      if (filled(p)) picker.burnOne(p);
+      picker.burnOne(p);
       if (active < order.length - 1) {
         active++;
         render();
@@ -3051,11 +3051,10 @@
   function answered(n) {
     if (debug) return true; // debugging: blanks are let through
     switch (n) {
-      case 1: return !!form.elements.age.value // the five required questions, all on page 1
+      case 1: return !!form.elements.age.value // the four required questions, all on page 1 (the afterlife one is optional)
         && anyChecked('heritage')
         && anyChecked('residence') && (!abroad.checked || !!country.value.trim())
-        && anyChecked('burning')
-        && !!form.elements.afterlife.value.trim();
+        && anyChecked('burning');
       default: return true;
     }
   }
