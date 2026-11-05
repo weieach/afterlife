@@ -90,7 +90,7 @@ window.SURVEY_CONTENT.zh = {
     publish: '在公开的结果页面展示我的心愿单',
     showReasons: '展示我选择每件物品的理由',
     shareCustom: '把我自定义的物品加入可选列表，供其他人选择',
-    thoughts: '还有什么想和我们分享的吗？',
+    thoughts: '还有什么想分享的吗？',
     age: '你的年龄是？',
     agePlaceholder: '请选择年龄段',
     ageRanges: {

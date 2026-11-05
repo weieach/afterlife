@@ -90,7 +90,7 @@ window.SURVEY_CONTENT.en = {
     publish: 'Show my wishlist on the public results page',
     showReasons: 'Show why I picked each item',
     shareCustom: 'Add my custom items to the selection, for other people to choose',
-    thoughts: 'Any more thoughts to share with us?',
+    thoughts: 'Any more thoughts to share?',
     age: 'How old are you?',
     agePlaceholder: 'Select an age range',
     ageRanges: {
