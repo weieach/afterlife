@@ -597,8 +597,8 @@
   // Debugging mode (the red switch in the header row, remembered in this browser): Continue with
   // fewer than five picks (one at least: a response needs one), and the required questions may
   // be left blank. Otherwise both are enforced.
-  // Off for now: the switch is hidden and debugging stays off, even in a browser that
-  // remembered it on. To bring it back, set this to true and remove `hidden` from the switch in index.html.
+  // The switch is taken away (hidden in index.html), so debugging stays off everywhere. To bring it
+  // back, set this to true and remove `hidden` from the switch in index.html.
   const DEBUG_AVAILABLE = false;
   const DEBUG_KEY = 'afterlife-survey-debug';
   const debugSwitch = $('#debug-mode');
@@ -1184,7 +1184,11 @@
       p.el.classList.toggle('as-image', p.asImage);
       p.el.querySelectorAll('.pill__img, .pill__flames').forEach((el) => el.remove());
       if (img) {
-        const w = p.imgW || Math.round(R * 0.66); // a custom item keeps its capsule's width
+        // fits a square box, so a tall cutout (the ATM) is no bigger than the rest; a custom item
+        // keeps its capsule's width
+        const box = Math.round(R * 0.66);
+        const fit = Math.min(1, img.naturalWidth / img.naturalHeight);
+        const w = p.imgW || Math.round(box * fit);
         const h = Math.round((w * img.naturalHeight) / img.naturalWidth);
         // it catches fire the first time it goes in; after that it's already charred (still flickering)
         const [el, flames, burnOut] = burn.create(img, w, h, p.burned);
@@ -1710,6 +1714,7 @@
         });
       }
       syncClear();
+      syncCrowd();
       for (const p of pills) {
         const { x, y } = p.body.position;
         p.el.style.transform = `translate(${x - p.w / 2}px, ${y - p.h / 2}px) rotate(${p.body.angle}rad)`;
@@ -2179,8 +2184,11 @@
       });
     }
     // Fit inside a square box, so tall cutouts (the cane) don't tower over the rest. A little
-    // larger while searching, where the box follows the screen's width.
-    const thumbBox = () => Math.round(searchMode ? Math.min(150, Math.max(90, W * 0.095)) : Math.min(110, R * 0.5));
+    // larger while searching, where the box follows the screen's width. A fifth smaller on phones.
+    const thumbBox = () => {
+      const box = searchMode ? Math.min(150, Math.max(90, W * 0.095)) : Math.min(110, R * 0.5);
+      return Math.round(W <= 700 ? box * 0.8 : box);
+    };
     function sizeThumb(p) {
       const img = p.thumbImg;
       if (!p.thumb || !img) return;
@@ -2351,6 +2359,21 @@
       const any = searchMode && !burning && pills.some((p) => !p.filtered && !picks.includes(p) && p.mode !== 'exit');
       if (clearBtn.hidden === any) clearBtn.hidden = !any;
       if (any && !clearBtn.title) clearBtn.title = clearBtn.getAttribute('aria-label') || ''; // "清空屏幕 / Clear screen" on hover
+    }
+    // Phones: once more than CROWD items float outside the tin, the question fades away so
+    // they aren't drawn over it (the spare "Other" doesn't count). It comes back as they go.
+    const CROWD = 4;
+    const phone = matchMedia('(max-width: 700px)');
+    const headlineEl = $('.screen--pick .headline');
+    function syncCrowd() {
+      let n = 0;
+      if (phone.matches) {
+        for (const p of pills) {
+          if (!p.filtered && !picks.includes(p) && p.mode !== 'exit' && !(p.other && !p.customName)) n++;
+        }
+      }
+      const crowded = n > CROWD;
+      if (headlineEl.classList.contains('is-crowded') !== crowded) headlineEl.classList.toggle('is-crowded', crowded);
     }
     clearBtn.addEventListener('click', () => {
       dropCat = null;
@@ -2666,6 +2689,11 @@
       settings.hidden = !open;
       settingsBtn.setAttribute('aria-expanded', String(open));
     }
+    // a square as tall as Back beside it (its two lines set its height, which varies by screen)
+    new ResizeObserver(() => {
+      const h = backBtn.getBoundingClientRect().height; // unrounded, so the two line up exactly
+      if (h) settingsBtn.style.setProperty('--side', `${h}px`);
+    }).observe(backBtn);
     settingsBtn.addEventListener('click', () => openSettings(settings.hidden));
     addEventListener('resize', () => { if (!settings.hidden) placeSettingsPanel(); });
     document.addEventListener('pointerdown', (e) => {
@@ -2898,12 +2926,16 @@
       order.forEach((p, i) => {
         const card = cards.get(p);
         card.querySelectorAll('.card__input').forEach(fit);
-        const depth = (i - active + n) % n;
+        // the ones already done have slid off to the right (above the rest, so Back brings
+        // one back in over the pile); the pile is what's left, front first
+        const gone = i < active;
+        const depth = gone ? 0 : i - active;
         card.style.setProperty('--depth', Math.min(depth, 3));
-        card.style.zIndex = n - depth;
-        card.classList.toggle('is-front', depth === 0);
+        card.style.zIndex = gone ? n + 1 + i : n - depth;
+        card.classList.toggle('is-gone', gone);
+        card.classList.toggle('is-front', !gone && depth === 0);
         card.classList.toggle('is-buried', depth > 3);
-        card.inert = depth !== 0;
+        card.inert = gone || depth !== 0;
         card.querySelector('.card__count').textContent = `${i + 1} / ${n}`;
       });
       syncNext();
@@ -3006,7 +3038,8 @@
       pickScreen.style.removeProperty('--tin-shift');
     }
 
-    // Continue: the stack shrinks down into the tin, then tin and cards slide off together.
+    // Continue: the two part ways, the tin sliding off to the left while the cards (with their
+    // title and buttons) go off to the right.
     let leaving = false;
     async function finish() {
       if (leaving) return;
@@ -3014,26 +3047,20 @@
       syncNext();
       const moved = [];
       if (!calm.matches) {
-        const t = $('#inventory').getBoundingClientRect(), s = root.getBoundingClientRect();
-        const k = (t.width * 0.3) / s.width;
-        const dx = t.left + t.width / 2 - (s.left + s.width / 2), dy = t.top + t.height / 2 - (s.top + s.height / 2);
-        const rest = [...column.children].filter((el) => el !== root);
-        rest.forEach((el) => moved.push(el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: 'forwards' })));
-        const shrink = root.animate([
-          { transform: 'none' },
-          { transform: `translate(${dx}px, ${dy}px) scale(${k})` },
-        ], { duration: 750, easing: 'cubic-bezier(.55, 0, .25, 1)', fill: 'forwards' });
-        moved.push(shrink);
-        await shrink.finished;
-        const off = `${-(t.right + 60)}px 0`; // far enough that the tin's right edge clears the screen
-        const slides = [stage, root].map((el) => el.animate([{ translate: '0 0' }, { translate: off }], {
-          duration: 700, easing: 'cubic-bezier(.6, 0, .35, 1)', fill: 'forwards',
-        }));
-        moved.push(...slides);
-        await Promise.all(slides.map((a) => a.finished));
+        const t = $('#inventory').getBoundingClientRect(), c = column.getBoundingClientRect();
+        const toLeft = `${-(t.right + 60)}px 0`; // far enough that the tin's right edge clears the screen
+        const toRight = `${innerWidth - c.left + 60}px 0`; // and the cards' left edge
+        const slide = { duration: 800, easing: 'cubic-bezier(.6, 0, .35, 1)', fill: 'forwards' };
+        pickScreen.classList.add('is-parting'); // no sideways scrollbar while the cards are past the edge
+        moved.push(
+          stage.animate([{ translate: '0 0' }, { translate: toLeft }], slide),
+          column.animate([{ translate: '0 0' }, { translate: toRight }], slide),
+        );
+        await Promise.all(moved.map((a) => a.finished));
       }
       go('about');
       moved.forEach((a) => a.cancel()); // ready for Back, behind the next screen
+      pickScreen.classList.remove('is-parting');
       leaving = false;
       syncNext();
     }
@@ -3315,6 +3342,19 @@
 
   document.title = joined('meta.title');
   applyText(document);
+  // Under the pick page's question: a note with an info icon. Inside the heading, so the tin
+  // keeps clear of it and it moves with the question (entrance, hover outline, fading out).
+  {
+    const note = document.createElement('span');
+    note.className = 'headline__note';
+    note.setAttribute('role', 'note');
+    note.lang = 'en';
+    note.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7"/><path d="M8 7v4.5"/><circle class="dot" cx="8" cy="4.6" r=".9"/></svg>';
+    const text = document.createElement('span');
+    text.textContent = t('pick.note', 'en');
+    note.append(text);
+    $('[data-screen="pick"] .headline').append(note);
+  }
   intro.render();
   picker.relabelAll();
   loadProgress();

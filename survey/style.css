@@ -442,11 +442,30 @@ html.is-snapping { scroll-snap-type: y mandatory; }
   paint-order: stroke fill;
   transition: -webkit-text-stroke-color .3s ease, z-index 0s .3s, opacity .4s ease; /* drop back only after fading */
 }
+/* phones, with lots floating outside the tin: the question fades out (app.js, syncCrowd) */
+.screen--pick .headline.is-crowded { opacity: 0; }
 .screen--pick .headline.is-raised {
   z-index: 3; /* above capsules, below detail cards and nav */
   -webkit-text-stroke-color: #fff;
   transition: -webkit-text-stroke-color .3s ease, z-index 0s, opacity .4s ease;
 }
+/* "Note: Every provided option is…" under the English question (app.js), an ⓘ to its left:
+   body font, small and grey, with a thinner white outline when the question is raised */
+.headline__note {
+  display: flex;
+  align-items: flex-start; /* the icon level with the first line when it wraps */
+  gap: .45em;
+  margin-top: .7em;
+  font-family: var(--font);
+  font-size: clamp(13px, 1vw, 15px);
+  font-weight: 400;
+  line-height: 1.35;
+  letter-spacing: 0;
+  color: var(--muted);
+  -webkit-text-stroke-width: 6px;
+}
+.headline__note svg { flex: none; width: 1.15em; height: 1.15em; margin-top: .1em; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; }
+.headline__note svg .dot { fill: currentColor; stroke: none; }
 
 /* entrance after Start: only the question shows at first (it's centred and moved in app.js);
    the rest fades in once it has risen into place */
@@ -970,8 +989,9 @@ body:has(.screen--intro:not([hidden])) .debug-switch { top: calc(var(--topbar-pa
   flex: none;
   display: grid;
   place-items: center;
-  width: 64px;
-  height: 64px;
+  width: var(--side, 64px); /* --side: Back's height (app.js) */
+  height: var(--side, 64px);
+  aspect-ratio: 1;
   margin: 0;
   padding: 0;
   border: 1px solid #fff;
@@ -1098,6 +1118,7 @@ body:has(.screen--intro:not([hidden])) .debug-switch { top: calc(var(--topbar-pa
 .picks:not([hidden]) { animation: picks-in .6s ease .45s both; } /* once the tin has moved */
 @keyframes picks-in { from { opacity: 0; transform: translateX(40px); } }
 .picks.is-below { left: 16px; right: 16px; width: auto; margin: 0 auto; max-width: 380px; }
+.screen--pick.is-parting { overflow-x: clip; } /* Continue: the cards slide off past the right edge */
 .picks__title { margin: 0; font-size: calc(var(--h1-size) * .75); font-weight: 400; line-height: 1.15; }
 .picks__title:lang(en) { font-family: "scatterplot-vf", var(--font); }
 .picks__title .bi__en { font-weight: 300; font-size: .92em; margin-top: .15em; }
@@ -1117,10 +1138,22 @@ body:has(.screen--intro:not([hidden])) .debug-switch { top: calc(var(--topbar-pa
   background: #FBF4B0;
   border: 1px solid var(--fg);
   transform: translate(calc(var(--depth, 0) * 5px), calc(var(--depth, 0) * 5px));
-  transition: transform .2s;
+  transition: transform .55s cubic-bezier(.6, 0, .35, 1), visibility 0s;
 }
-.card:not(.is-front) > * { visibility: hidden; } /* only the front card's content shows */
+/* only the front card's content shows; one covered by a card coming back (Back) keeps its own
+   until that card is over it */
+.card > * { transition: visibility 0s; }
+.card:not(.is-front):not(.is-gone) > * { visibility: hidden; transition: visibility 0s .55s; }
 .card.is-buried { visibility: hidden; }
+/* Continue: the finished card slides off to the right, leaving the rest of the pile;
+   Back brings it in again. Hidden once it's out of sight. */
+.card.is-gone {
+  transform: translate(100vw, 0);
+  visibility: hidden;
+  transition: transform .55s cubic-bezier(.6, 0, .35, 1), visibility 0s .55s;
+}
+.screen--pick.is-reviewing { overflow-x: clip; } /* no sideways scrollbar while a card is past the edge */
+@media (prefers-reduced-motion: reduce) { .card, .card.is-gone, .card > *, .card:not(.is-front):not(.is-gone) > * { transition: none; } }
 
 .card__head { display: flex; align-items: center; gap: 14px; }
 .card__thumb {
@@ -1376,8 +1409,19 @@ span.cat-chip.bi { display: inline-flex; }
   .screen--pick { min-height: 0; }
   /* with the keyboard up the list covers the question and the tin: solid, so it reads */
   .search__list { background: var(--bg); }
-  .pill { font-size: 12px; padding: 4px 12px; max-width: 130px; }
-  .pill__zh { font-size: 10px; }
+  .pill { font-size: 11px; padding: 4px 11px; max-width: 120px; }
+  .pill__zh { font-size: 9px; }
+  /* searching: the loose items stay small too (the desktop sizes follow the screen's width) */
+  .stage.is-searching .pill:not(.is-picked) { font-size: 11px; }
+  .stage.is-searching .pill:not(.is-picked):not(.as-thumb) { max-width: 120px; }
+  .pill.as-thumb .pill__en,
+  .pill.as-thumb .pill__zh,
+  .stage.is-searching .pill.as-thumb .pill__en,
+  .stage.is-searching .pill.as-thumb .pill__zh { max-width: 100px; }
+  .pill.pill--other.is-cast:not(.is-picked),
+  .stage.is-searching .pill.pill--other.is-cast:not(.is-picked) { max-width: 170px; font-size: 15px; }
+  /* the tin's prompt */
+  .inventory__hint { max-width: 66cqw; font-size: clamp(10px, 4.6cqw, 12px); }
   .brand { font-size: 13px; }
   .topbar .btn { padding: 8px 12px; font-size: 13px; }
   .thanks__actions { gap: 16px; }
