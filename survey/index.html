@@ -147,6 +147,11 @@
   <section class="screen screen--about" data-screen="about" hidden>
     <header class="topbar">
       <a class="brand" href="./" data-t="brand"></a>
+      <!-- 中文 / EN: the questions below show one language at a time (app.js, qLang); this
+           header stays bilingual -->
+      <div class="lang-switch" id="lang-switch" role="group" aria-label="语言 Language">
+        <button type="button" data-lang="zh" lang="zh-CN">中文</button><span aria-hidden="true">/</span><button type="button" data-lang="en" lang="en">EN</button>
+      </div>
       <!-- Back, and Continue / Submit (a submit button for the form below) -->
       <div class="topbar__actions">
         <button class="btn btn--outline" type="button" id="demo-back" data-t="ui.back"></button>

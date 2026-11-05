@@ -8,6 +8,7 @@
   /* ---------- text (content/en.js, content/zh.js) ---------- */
 
   // The site is bilingual throughout: every piece of text shows in English and Chinese together.
+  // Except the questions (#/about): one language at a time there, with a switch in their top bar.
   const CONTENT = window.SURVEY_CONTENT;
 
   const lookup = (obj, path) => path.split('.').reduce((o, k) => (o == null ? o : o[k]), obj);
@@ -53,9 +54,33 @@
     return node;
   }
 
+  /* The questions' language: the browser's at first, then whatever the switch was last set to. */
+  const QLANG_KEY = 'afterlife-survey-lang';
+  let qLang = (() => {
+    try {
+      const saved = localStorage.getItem(QLANG_KEY);
+      if (saved === 'en' || saved === 'zh') return saved;
+    } catch (_) { /* storage unavailable */ }
+    const first = (navigator.languages && navigator.languages[0]) || navigator.language || '';
+    return /^zh\b/i.test(first) ? 'zh' : 'en';
+  })();
+  // the questions themselves (not their header, which stays bilingual): one language
+  const oneLang = (el) => !!el.closest?.('[data-screen="about"] .demo');
+
   // Both as two spans in el, Chinese first, then English (just one when they're the same).
-  // CSS stacks them, English under Chinese.
+  // CSS stacks them, English under Chinese. On the questions screen, just the chosen one.
   function fillPair(el, en, zh) {
+    if (oneLang(el)) {
+      const span = document.createElement('span');
+      const useZh = qLang === 'zh' && !!zh;
+      span.className = 'bi__one';
+      span.lang = useZh ? 'zh-CN' : 'en';
+      if (useZh) span.textContent = zh;
+      else setText(span, en);
+      el.classList.add('bi');
+      el.replaceChildren(span);
+      return;
+    }
     const parts = [[zh !== en && zh, 'zh'], [en, 'en']].filter(([text]) => text).map(([text, l]) => {
       const span = document.createElement('span');
       span.className = `bi__${l}`;
@@ -3116,7 +3141,7 @@
     }));
     const row = {
       id: window.SURVEY_DB.newId(),
-      lang: null, // both languages are always shown, so there's no choice to record
+      lang: qLang, // the language the questions were answered in (their switch)
       picks: showReasons ? all : all.map(({ reason, ...pick }) => pick),
       reasons: showReasons ? null : all.map((pick) => pick.reason), // private, in pick order
       show_reasons: showReasons,
@@ -3142,6 +3167,7 @@
     } catch (err) {
       console.error('[survey] could not save response', err);
       fill(formMsg, 'about.saveError');
+      formMsg.dataset.msg = 'about.saveError'; // said again on a language switch, while it's up
       formMsg.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
     saving = false;
@@ -3257,7 +3283,7 @@
   // <option>s can only hold plain text, so they get "English / 中文".
   function applyText(root) {
     root.querySelectorAll('[data-t]').forEach((el) => {
-      if (el.tagName === 'OPTION') el.textContent = joined(el.dataset.t);
+      if (el.tagName === 'OPTION') el.textContent = oneLang(el) ? t(el.dataset.t, qLang) : joined(el.dataset.t);
       else fill(el, el.dataset.t);
     });
     root.querySelectorAll('[data-t-placeholder]').forEach((el) => {
@@ -3269,6 +3295,23 @@
     });
     root.querySelectorAll('[data-t-aria]').forEach((el) => { el.setAttribute('aria-label', joined(el.dataset.tAria)); });
   }
+
+  // The questions' language switch, 中文 / EN in their top bar: the one in use is marked.
+  const questions = $('[data-screen="about"] .demo');
+  const langBtns = [...document.querySelectorAll('#lang-switch [data-lang]')];
+  function applyQLang() {
+    questions.lang = qLang === 'zh' ? 'zh-CN' : 'en';
+    langBtns.forEach((btn) => btn.setAttribute('aria-pressed', String(btn.dataset.lang === qLang)));
+  }
+  langBtns.forEach((btn) => btn.addEventListener('click', () => {
+    if (btn.dataset.lang === qLang) return;
+    qLang = btn.dataset.lang;
+    try { localStorage.setItem(QLANG_KEY, qLang); } catch (_) { /* storage unavailable */ }
+    applyQLang();
+    applyText(questions); // answers stay as they are; only the words around them change
+    if (formMsg.textContent && formMsg.dataset.msg) fill(formMsg, formMsg.dataset.msg);
+  }));
+  applyQLang();
 
   document.title = joined('meta.title');
   applyText(document);
