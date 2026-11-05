@@ -483,6 +483,10 @@ html.is-snapping { scroll-snap-type: y mandatory; }
   inset: 0;
   z-index: 1;
   overflow: hidden;
+  /* clip, not hidden: a hidden-overflow box can still be scrolled by the browser itself, and
+     focusing the search field would nudge the tin, items and field up and back (a jitter).
+     A clipped one can't scroll, so the browser moves the page instead. */
+  overflow: clip;
 }
 
 .inventory {
@@ -1407,6 +1411,10 @@ span.cat-chip.bi { display: inline-flex; }
   /* one screen tall, as on desktop; no floor, so it can shrink with the keyboard
      (interactive-widget in index.html) instead of the page scrolling */
   .screen--pick { min-height: 0; }
+  /* no scrolling the pick page by hand (app.js also stops the drag); the browser can still move
+     it to show the search field above the keyboard. The cards step scrolls as usual. */
+  html:has(.screen--pick:not([hidden]):not(.is-reviewing)),
+  html:has(.screen--pick:not([hidden]):not(.is-reviewing)) body { overflow: hidden; overscroll-behavior: none; }
   /* with the keyboard up the list covers the question and the tin: solid, so it reads */
   .search__list { background: var(--bg); }
   .pill { font-size: 11px; padding: 4px 11px; max-width: 120px; }

@@ -2726,6 +2726,17 @@
     }
 
     new ResizeObserver(() => { if (running) layout(); }).observe(stage);
+    // The stage never scrolls (style.css clips it); in a browser without overflow: clip, undo any
+    // scroll it gets from focusing the search field, so nothing jumps.
+    stage.addEventListener('scroll', () => { if (stage.scrollTop || stage.scrollLeft) stage.scrollTop = stage.scrollLeft = 0; });
+    // Phones: the pick page can't be scrolled by hand (dragging items, the results list and
+    // pinch-zoom still work; the browser can still move it to show the search field above the
+    // keyboard). Not on the cards step, which scrolls.
+    pickScreen.addEventListener('touchmove', (e) => {
+      if (!phone.matches || reviewing || e.touches.length > 1 || !e.cancelable) return;
+      if (e.target.closest('.search__list, .settings')) return;
+      e.preventDefault();
+    }, { passive: false });
 
     return {
       start() {
