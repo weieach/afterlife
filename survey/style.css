@@ -7,6 +7,7 @@
   --sticky: #fff27a; /* detail cards */
   --disabled-bg: #d6d6d6;
   --disabled-fg: #6b6b6b;
+  --required: #d40000; /* the asterisk on required questions */
   --gutter: clamp(16px, 2.6vw, 50px);
   --topbar-pad: clamp(10px, 1.4vw, 20px); /* space above the nav's contents */
   --font: "Nanum Myeongjo", "Songti SC", "Noto Serif SC", serif;
@@ -125,6 +126,8 @@ span.bi { display: inline-block; }
 .field { display: flex; flex-direction: column; gap: 8px; border: 0; margin: 0; padding: 0; min-width: 0; }
 .field__label { font-size: 18px; line-height: 1.3; padding: 0; }
 .field > .field__label { margin-bottom: 12px; } /* air between the question and its answer */
+/* required questions: a red asterisk at the end of the last line (the English) */
+.field__label.is-required > :last-child::after { content: " *"; color: var(--required); }
 .field__hint { font-size: 14px; color: var(--muted); margin-top: -4px; }
 
 .field input[type="text"],

@@ -125,7 +125,7 @@
           <p class="card__item"></p>
         </div>
         <label class="field card__other">
-          <span class="field__label" data-t="details.otherName"></span>
+          <span class="field__label is-required" data-t="details.otherName"></span>
           <textarea class="card__input" name="other" rows="1" data-t-placeholder="details.otherNamePlaceholder"></textarea>
         </label>
         <label class="field">
@@ -133,7 +133,7 @@
           <textarea class="card__input" name="variation" rows="1" data-t-placeholder="details.variationPlaceholder"></textarea>
         </label>
         <label class="field">
-          <span class="field__label" data-t="details.reason"></span>
+          <span class="field__label is-required" data-t="details.reason"></span>
           <textarea class="card__input" name="reason" rows="1" data-t-placeholder="details.reasonPlaceholder"></textarea>
         </label>
         <p class="card__count"></p>
@@ -160,7 +160,7 @@
           <p class="demo__divider" data-t="about.researchNote"></p>
 
           <label class="field">
-            <span class="field__label" data-t="about.age"></span>
+            <span class="field__label is-required" data-t="about.age"></span>
             <select name="age" required>
               <option value="" selected disabled data-t="about.agePlaceholder"></option>
               <option value="under-18" data-t="about.ageRanges.under-18"></option>
@@ -174,7 +174,7 @@
           </label>
 
           <fieldset class="field">
-            <legend class="field__label" data-t="about.heritage"></legend>
+            <legend class="field__label is-required" data-t="about.heritage"></legend>
             <label class="choice"><input type="radio" name="heritage" value="in-greater-china" required> <span data-t="about.heritageOptions.in-greater-china"></span></label>
             <label class="choice"><input type="radio" name="heritage" value="first-gen"> <span data-t="about.heritageOptions.first-gen"></span></label>
             <label class="choice"><input type="radio" name="heritage" value="second-gen-plus"> <span data-t="about.heritageOptions.second-gen-plus"></span></label>
@@ -183,26 +183,26 @@
           </fieldset>
 
           <fieldset class="field">
-            <legend class="field__label" data-t="about.residence"></legend>
+            <legend class="field__label is-required" data-t="about.residence"></legend>
             <label class="choice"><input type="radio" name="residence" value="mainland" required> <span data-t="about.residenceOptions.mainland"></span></label>
             <label class="choice"><input type="radio" name="residence" value="hk-macao-taiwan"> <span data-t="about.residenceOptions.hk-macao-taiwan"></span></label>
             <label class="choice"><input type="radio" name="residence" value="overseas"> <span data-t="about.residenceOptions.overseas"></span></label>
             <!-- abroad: which country (required then) -->
             <label class="field field--sub" id="country-field" hidden>
-              <span class="field__label" data-t="about.country"></span>
+              <span class="field__label is-required" data-t="about.country"></span>
               <input type="text" name="country" autocomplete="country-name" disabled>
             </label>
           </fieldset>
 
           <fieldset class="field">
-            <legend class="field__label" data-t="about.burning"></legend>
+            <legend class="field__label is-required" data-t="about.burning"></legend>
             <label class="choice"><input type="radio" name="burning" value="every-year" required> <span data-t="about.burningOptions.every-year"></span></label>
             <label class="choice"><input type="radio" name="burning" value="occasionally"> <span data-t="about.burningOptions.occasionally"></span></label>
             <label class="choice"><input type="radio" name="burning" value="tried-before"> <span data-t="about.burningOptions.tried-before"></span></label>
             <label class="choice"><input type="radio" name="burning" value="never"> <span data-t="about.burningOptions.never"></span></label>
           </fieldset>
           <label class="field">
-            <span class="field__label" data-t="about.afterlife"></span>
+            <span class="field__label is-required" data-t="about.afterlife"></span>
             <textarea name="afterlife" rows="4" maxlength="4000" required></textarea>
           </label>
         </div>
