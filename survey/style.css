@@ -375,10 +375,6 @@ html.is-snapping { scroll-snap-type: y mandatory; }
 @media (min-width: 701px) {
   .intro__launch { width: max(180px, min(var(--stage-h) * 0.56, 66vw)); }
 }
-/* large monitors (wider than a 16" MacBook Pro): larger still (app.js: 64% of the height) */
-@media (min-width: 1729px) {
-  .intro__launch { width: max(180px, min(var(--stage-h) * 0.64, 66vw)); }
-}
 /* Start: white on a black block, the size of the paragraph above it, sitting on the middle of the tin */
 .intro__start {
   position: absolute;
