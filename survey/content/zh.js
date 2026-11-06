@@ -154,7 +154,7 @@ window.SURVEY_CONTENT.zh = {
     { id: 'luxury', name: '奢侈品与房产' },
     { id: 'tech', name: '科技' },
     { id: 'care', name: '个人起居' },
-    { id: 'wealth', name: '财富' },
+    { id: 'wealth', name: '钱财' },
     { id: 'food', name: '食品' },
     { id: 'vices', name: '烟酒茶' },
     { id: 'assistants', name: '助手' },

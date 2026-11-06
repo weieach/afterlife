@@ -158,7 +158,7 @@ window.SURVEY_CONTENT.en = {
     { id: 'luxury', name: 'Luxuries & real estate' }, // includes cars, motorcycles, jets, yachts and other big-ticket vehicles
     { id: 'tech', name: 'Technology' },
     { id: 'care', name: 'Personal care & comfort' }, // also clothing, health and mobility aids, bedding and the recliner
-    { id: 'wealth', name: 'Wealth' }, // gold, ingots, hell money, the money tree, ATM
+    { id: 'wealth', name: 'Money' }, // gold, ingots, hell money, the money tree, ATM (id kept: saved answers and the cutout folder use it)
     { id: 'food', name: 'Food' },
     { id: 'vices', name: 'Alcohol, cigarettes & tea' },
     { id: 'assistants', name: 'Assistants' }, // the AI robot and household staff
