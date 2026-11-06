@@ -1459,7 +1459,7 @@
       return {
         mid: window.innerHeight / 2 - stageTop,
         top: Math.max(8, textBottom + 24),
-        floor: searchMode ? H - (rowPad() - 6) - searchField.offsetHeight : H - 8, // just above the field
+        floor: searchMode ? fieldTopAt(searchField.offsetHeight) + 6 : H - 8, // just above the field
       };
     }
 
@@ -2297,6 +2297,14 @@
     const CLEAR_GAP = 8; // px between the field and the ×, as in style.css
     const narrow = matchMedia('(max-width: 700px)'); // phones, as in style.css
     const rowPad = () => (narrow.matches ? ROW_PAD_PHONE : ROW_PAD);
+    // Where the field's top edge goes. Wider screens: a share of the screen's height, so it keeps
+    // its place as the screen gets taller or shorter (at least 12px of room left under it).
+    // Phones: a fixed gap above the bottom.
+    const FIELD_TOP = 0.9;
+    function fieldTopAt(fieldH) {
+      if (narrow.matches) return H - rowPad() - fieldH;
+      return Math.min(H * FIELD_TOP, H - fieldH - 12);
+    }
     let searchWall = null;
     const wallOpts = { isStatic: true, collisionFilter: { group: 0, category: CAT.DISK, mask: CAT.OUT } };
     function placeSearch() {
@@ -2318,7 +2326,7 @@
         if (left + width + side > W - 16) { width = W - 32 - side; left = 16; }
       }
       const pad = rowPad();
-      const bottom = H > window.innerHeight ? Math.min(H - pad, cy + R + 32 + fieldH) : H - pad;
+      const bottom = H > window.innerHeight ? Math.min(H - pad, cy + R + 32 + fieldH) : fieldTopAt(fieldH) + fieldH;
       Object.assign(searchEl.style, { width: `${width}px`, left: `${left}px`, bottom: `${H - bottom}px` });
       searchEl.style.setProperty('--search-side', `${side}px`); // phones: the list spreads past the field by this, both sides
       if (!searchMode) return;
