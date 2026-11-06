@@ -1439,6 +1439,10 @@
     // isn't simply H / 2), the highest its top may go (clear of the question) and the lowest its
     // bottom may go (clear of the bottom, or the search field). Tall phone layouts: whole stage.
     const TIN_DROP = 20; // px the tin sits below where it would just clear the question (room permitting)
+    const wideTin = matchMedia('(min-width: 701px)'); // wider than a phone: the tin sized from the screen's height
+    const TIN_OF_HEIGHT = 0.28; // its radius, as a share of the screen's height
+    const monitor = matchMedia('(min-width: 1729px)'); // wider than a 16" MacBook Pro: large monitors
+    const TIN_OF_HEIGHT_MONITOR = 0.32; // larger there (2R = 64% of the height)
     function tinRoom() {
       if (H > window.innerHeight) return { mid: H / 2, top: 8, floor: H - 8 };
       const stageTop = stage.getBoundingClientRect().top;
@@ -1465,7 +1469,14 @@
       H = rect.height;
       // centred on the screen, dropping (and, if it must, shrinking) to clear the question
       const room = tinRoom();
-      R = Math.max(90, Math.min(Math.min(W, H) * 0.3, 230, (room.floor - room.top) / 2));
+      // Wider screens: from the screen's height (28% of it, ~504px across at 900px tall; 32% on
+      // screens wider than 1728px), no fixed cap, and never wider than a third of the width. Phones: 30% of the shorter side, at most
+      // 230px. Either way it keeps clear of the question and the search bar.
+      // (style.css .intro__launch sizes the landing's tin the same way.)
+      const fit = wideTin.matches
+        ? Math.min(H * (monitor.matches ? TIN_OF_HEIGHT_MONITOR : TIN_OF_HEIGHT), W * 0.33)
+        : Math.min(Math.min(W, H) * 0.3, 230);
+      R = Math.max(90, Math.min(fit, (room.floor - room.top) / 2));
       cx = W / 2;
       cy = Math.min(Math.max(room.mid, room.top + R) + TIN_DROP, room.floor - R);
       const dx = cx - was.x, dy = cy - was.y;

@@ -359,7 +359,7 @@ html.is-snapping { scroll-snap-type: y mandatory; }
   .intro__reel-track { animation: none; }
 }
 /* As wide as the top-view tin on the pick screen: the same 2R as layout() in app.js,
-   R = 30% of the stage's shorter side (the screen), kept within 90-230px.
+   R = 30% of the stage's shorter side (the screen), kept within 90-230px; on wider screens, sized from the screen's height (below).
    Hangs below the prompt, out of its flow, so the prompt stays centred on the screen. */
 .intro__launch {
   --stage-h: max(100dvh, 560px);
@@ -369,6 +369,15 @@ html.is-snapping { scroll-snap-type: y mandatory; }
   right: 0;
   width: clamp(180px, min(100vw, var(--stage-h)) * 0.6, 460px);
   margin: 2em auto 0;
+}
+/* wider than a phone: from the screen's height, with no fixed cap, like the pick screen's tin
+   (app.js layout: 2R = 56% of the height, at most 66% of the width) */
+@media (min-width: 701px) {
+  .intro__launch { width: max(180px, min(var(--stage-h) * 0.56, 66vw)); }
+}
+/* large monitors (wider than a 16" MacBook Pro): larger still (app.js: 64% of the height) */
+@media (min-width: 1729px) {
+  .intro__launch { width: max(180px, min(var(--stage-h) * 0.64, 66vw)); }
 }
 /* Start: white on a black block, the size of the paragraph above it, sitting on the middle of the tin */
 .intro__start {
