@@ -169,7 +169,7 @@
   function sampleRows() {
     let seed = 7;
     const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-    const items = (CONTENT.en.items || []).map((it) => ({ id: it.id, w: rand() ** 3 + 0.02 }));
+    const items = (CONTENT.en.items || []).filter((it) => !it.retired).map((it) => ({ id: it.id, w: rand() ** 3 + 0.02 })); // only what can be picked now
     const total = items.reduce((sum, it) => sum + it.w, 0);
     const draw = () => {
       let x = rand() * total;

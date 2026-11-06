@@ -259,7 +259,7 @@ window.SURVEY_CONTENT.en = {
 
     // assistants
     { id: 'ai-robot', name: 'AI robot', category: 'assistants', example: 'Robot butler' },
-    { id: 'servants', name: 'Household staff', category: 'assistants', example: 'Personal chef' }, // id kept: saved answers and the cutout use it
+    { id: 'servants', name: 'Household staff', category: 'assistants', example: 'Personal chef', retired: true }, // id kept: saved answers and the cutout use it. retired: no longer pickable, still shown in submissions that have it
 
     // misc
     { id: 'theater', name: 'Traditional Chinese theater', category: 'misc', example: 'Peking opera troupe' },

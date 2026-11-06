@@ -99,6 +99,10 @@
     itemNames[l] = new Map((CONTENT[l].items || []).map((it) => [it.id, it.name]));
   }
   const itemName = (id, l = 'en') => itemNames[l]?.get(id) ?? itemNames.en.get(id) ?? id;
+  // Items marked retired in en.js: no longer offered (not on the pick screen, in search or on the
+  // landing), but kept in the list so submissions that have them still show their name and colour.
+  const retired = new Set(CONTENT.en.items.filter((it) => it.retired).map((it) => it.id));
+  const offered = (id) => !retired.has(id);
 
   // Categories: en.js decides the list and each item's category. catName gives [English, Chinese].
   const CATS = CONTENT.en.categories || [];
@@ -855,7 +859,7 @@
       const box = document.createElement('div');
       box.className = 'intro__reel';
       box.setAttribute('aria-hidden', 'true');
-      const files = Object.keys((window.SURVEY_IMAGES || {}).files || {}).map(cutoutUrl).filter(Boolean);
+      const files = Object.keys((window.SURVEY_IMAGES || {}).files || {}).filter(offered).map(cutoutUrl).filter(Boolean);
       for (let i = files.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [files[i], files[j]] = [files[j], files[i]];
@@ -877,7 +881,7 @@
 
     // A handful of cutouts scattered around the last panel, like stickers.
     function stickers() {
-      const files = Object.keys((window.SURVEY_IMAGES || {}).files || {}).map(cutoutUrl).filter(Boolean);
+      const files = Object.keys((window.SURVEY_IMAGES || {}).files || {}).filter(offered).map(cutoutUrl).filter(Boolean);
       const layer = document.createElement('div');
       layer.className = 'intro__stickers';
       layer.setAttribute('aria-hidden', 'true');
@@ -2768,7 +2772,7 @@
         running = true;
         layout();
         if (!built) {
-          CONTENT.en.items.forEach((item) => createPill({ id: item.id }));
+          CONTENT.en.items.filter((item) => offered(item.id)).forEach((item) => createPill({ id: item.id }));
           createPill({ other: true });
           built = true;
           stale = false;
