@@ -551,8 +551,11 @@ html.is-snapping { scroll-snap-type: y mandatory; }
 .pill--other {
   justify-content: center;
   overflow-wrap: anywhere;
-  overflow: hidden;
+  overflow: hidden; /* keeps the noise inside the capsule */
 }
+/* in the tin it burns as a picture of its capsule: let the flames rise past its edges, as an
+   item with a cutout's do (the noise is hidden by then) */
+.pill.pill--other.as-image { overflow: visible; }
 /* the spare "Other": its fill is the drifting noise of the search list's "Add …" thumbnail
    (a canvas from app.js), under white text. In the tin, or typed-in and taken back out
    (search mode), it's an ordinary pill. */
