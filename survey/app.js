@@ -55,20 +55,19 @@
   }
 
   /* One language, for the questions and (on phones) the floating items' names: whatever either
-     switch (the questions' 中文 / EN, the pick screen's settings) was last set to. Until then,
-     Chinese on phones, otherwise the browser's. */
+     switch (the questions' 中文 / EN, the pick screen's settings) was last set to. Until one is
+     chosen (null), the questions show both languages and the items on phones are in Chinese. */
   const QLANG_KEY = 'afterlife-survey-lang';
   let qLang = (() => {
     try {
       const saved = localStorage.getItem(QLANG_KEY);
       if (saved === 'en' || saved === 'zh') return saved;
     } catch (_) { /* storage unavailable */ }
-    if (matchMedia('(max-width: 700px)').matches) return 'zh';
-    const first = (navigator.languages && navigator.languages[0]) || navigator.language || '';
-    return /^zh\b/i.test(first) ? 'zh' : 'en';
+    return null;
   })();
-  // the questions themselves (not their header, which stays bilingual): one language
-  const oneLang = (el) => !!el.closest?.('[data-screen="about"] .demo');
+  const itemLang = () => qLang || 'zh'; // phones: the floating items' names
+  // the questions themselves (not their header, which stays bilingual): one language, once chosen
+  const oneLang = (el) => !!qLang && !!el.closest?.('[data-screen="about"] .demo');
 
   // Both as two spans in el, Chinese first, then English (just one when they're the same).
   // CSS stacks them, English under Chinese. On the questions screen, just the chosen one.
@@ -3256,7 +3255,7 @@
     }));
     const row = {
       id: window.SURVEY_DB.newId(),
-      lang: qLang, // the language the questions were answered in (their switch)
+      lang: qLang, // the language the questions were answered in (their switch); null: both
       picks: showReasons ? all : all.map(({ reason, ...pick }) => pick),
       reasons: showReasons ? null : all.map((pick) => pick.reason), // private, in pick order
       show_reasons: showReasons,
@@ -3415,15 +3414,24 @@
   // settings (phones). The one in use is marked in both.
   const questions = $('[data-screen="about"] .demo');
   const langBtns = [...document.querySelectorAll('.lang-switch [data-lang]')];
+  const inQuestions = (btn) => !!btn.closest('#lang-switch');
   function applyQLang() {
-    questions.lang = qLang === 'zh' ? 'zh-CN' : 'en';
-    document.body.dataset.lang = qLang; // phones: the floating items' names (style.css)
-    langBtns.forEach((btn) => btn.setAttribute('aria-pressed', String(btn.dataset.lang === qLang)));
+    if (qLang) questions.lang = qLang === 'zh' ? 'zh-CN' : 'en';
+    else questions.removeAttribute('lang'); // both: each line carries its own
+    $('#lang-switch').hidden = !qLang; // both showing: nothing to switch (until one is chosen in the settings)
+    document.body.dataset.lang = itemLang(); // phones: the floating items' names (style.css)
+    // the questions' switch: neither marked while they show both; the settings': the items' language
+    langBtns.forEach((btn) => btn.setAttribute('aria-pressed', String(btn.dataset.lang === (inQuestions(btn) ? qLang : itemLang()))));
   }
   langBtns.forEach((btn) => btn.addEventListener('click', () => {
-    if (btn.dataset.lang === qLang) return;
-    qLang = btn.dataset.lang;
-    try { localStorage.setItem(QLANG_KEY, qLang); } catch (_) { /* storage unavailable */ }
+    let next = btn.dataset.lang;
+    if (inQuestions(btn) && next === qLang) next = null; // the chosen one again: back to both
+    else if (next === (inQuestions(btn) ? qLang : itemLang())) return;
+    qLang = next;
+    try {
+      if (qLang) localStorage.setItem(QLANG_KEY, qLang);
+      else localStorage.removeItem(QLANG_KEY);
+    } catch (_) { /* storage unavailable */ }
     applyQLang();
     applyText(questions); // answers stay as they are; only the words around them change
     if (formMsg.textContent && formMsg.dataset.msg) fill(formMsg, formMsg.dataset.msg);

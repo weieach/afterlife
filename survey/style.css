@@ -79,6 +79,7 @@ a.brand { color: inherit; text-decoration: none; }
 }
 .lang-switch button[aria-pressed="true"] { opacity: 1; text-decoration: underline; text-underline-offset: 3px; cursor: default; }
 .lang-switch button:not([aria-pressed="true"]):hover { opacity: 1; }
+#lang-switch button[aria-pressed="true"] { cursor: pointer; } /* the questions' one: clicked again, back to both */
 /* desktop, in the questions' top bar: Back's padding round it (.btn: 12px 28px) */
 @media (min-width: 701px) { .topbar > .lang-switch { padding: 12px 28px; } }
 .topbar__nav { display: flex; align-items: center; gap: 8px; }

@@ -161,8 +161,9 @@
   <section class="screen screen--about" data-screen="about" hidden>
     <header class="topbar">
       <a class="brand" href="./" data-t="brand"></a>
-      <!-- 中文 / EN: the questions below show one language at a time (app.js, qLang); this
-           header stays bilingual -->
+      <!-- 中文 / EN: hidden while the questions below show both languages; shown once one is
+           chosen in the pick screen's settings (phones). The chosen one again: both again, and it
+           hides (app.js, qLang). This header stays bilingual. -->
       <div class="lang-switch" id="lang-switch" role="group" aria-label="语言 Language">
         <button type="button" data-lang="zh" lang="zh-CN">中文</button><span aria-hidden="true">/</span><button type="button" data-lang="en" lang="en">EN</button>
       </div>
