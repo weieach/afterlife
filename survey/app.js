@@ -56,11 +56,13 @@
 
   /* One language, for the questions and (on phones) the floating items' names: whatever either
      switch (the questions' 中文 / EN, the pick screen's settings) was last set to. Until one is
-     chosen (null), the questions show both languages and the items on phones are in Chinese. */
+     chosen (null), the questions show both languages and the items on phones are in Chinese.
+     The choice lasts for this tab only (a reload keeps it), so every new visit starts with both. */
   const QLANG_KEY = 'afterlife-survey-lang';
   let qLang = (() => {
     try {
-      const saved = localStorage.getItem(QLANG_KEY);
+      localStorage.removeItem(QLANG_KEY); // kept for good by earlier versions: forgotten
+      const saved = sessionStorage.getItem(QLANG_KEY);
       if (saved === 'en' || saved === 'zh') return saved;
     } catch (_) { /* storage unavailable */ }
     return null;
@@ -1116,7 +1118,7 @@
     const toast = $('#toast');
     const continueBtn = $('#pick-continue');
     const backBtn = $('#pick-back');
-    const BURN_OUT = 2200; // ms for a pick to burn right through once its card is filled in
+    const BURN_OUT = 2200; // ms for a pick to burn right through once its card is submitted
 
     // Outer pills bump into each other, the walls and the solid inventory disk.
     // Inner pills bump into each other and the inside of the ring.
@@ -1271,11 +1273,11 @@
       return c;
     }
 
-    // A pick burns right away in the tin, once its card is filled in (cards screen).
+    // A pick burns away in the tin when its card is submitted (cards screen).
     function burnOne(p) {
       if (p.ashed || !picks.includes(p)) return Promise.resolve();
       p.ashed = true;
-      const gone = () => p.el.classList.add('is-leaving');
+      const gone = () => { if (p.ashed) p.el.classList.add('is-leaving'); }; // not if Back brought it back meanwhile
       if (calm.matches) return Promise.resolve(gone());
       if (p.asImage) {
         if (p.burnOut) return p.burnOut(BURN_OUT).then(gone);
@@ -1293,19 +1295,21 @@
       return burnOut(BURN_OUT).then(gone);
     }
 
-    // Back to picking: anything that burnt is there again, as it was.
-    function restore() {
-      for (const p of picks) {
-        if (!p.ashed) continue;
-        p.ashed = false;
-        p.el.classList.remove('is-leaving');
-        if (p.asImage) {
-          setAsImage(p, p.img); // already burnt once, so it comes back charred
-        } else {
-          p.el.querySelectorAll('.pill__img, .pill__flames').forEach((el) => el.remove());
-          p.el.classList.remove('as-image');
-        }
+    // Back to picking: anything that burnt is there again, as it was. (Back on the cards screen:
+    // just the last one submitted.)
+    function unburn(p) {
+      if (!p.ashed) return;
+      p.ashed = false;
+      p.el.classList.remove('is-leaving');
+      if (p.asImage) {
+        setAsImage(p, p.img); // already burnt once, so it comes back charred
+      } else {
+        p.el.querySelectorAll('.pill__img, .pill__flames').forEach((el) => el.remove());
+        p.el.classList.remove('as-image');
       }
+    }
+    function restore() {
+      picks.forEach(unburn);
     }
 
     // Continue asks first: are these the picks? Back to picking closes it (so do Escape and
@@ -2225,10 +2229,10 @@
       });
     }
     // Fit inside a square box, so tall cutouts (the cane) don't tower over the rest. A little
-    // larger while searching, where the box follows the screen's width. On phones, about the same.
+    // larger while searching, where the box follows the screen's width. A little smaller on phones.
     const thumbBox = () => {
       const box = searchMode ? Math.min(150, Math.max(90, W * 0.095)) : Math.min(110, R * 0.5);
-      return Math.round(W <= 700 ? box * 1.01 : box);
+      return Math.round(W <= 700 ? box * 0.88 : box);
     };
     function sizeThumb(p) {
       const img = p.thumbImg;
@@ -2922,6 +2926,7 @@
       imageSrc,
       colorFor,
       burnOne,
+      unburn,
       review,
       tin: () => ({ cx, cy, R, W, H }),
       picks: () => picks,
@@ -2929,9 +2934,10 @@
   })();
 
   /* ---------- detail cards: one per picked item, made as it's picked. On the cards screen
-     (#/details) the tin slides aside and they stack beside it, one card at a time: Continue
-     moves to the next (both answers optional; an unnamed "Other" needs its name), Back to the one
-     before. Each pick burns away in the tin once its card is filled in, or on Continue. ---------- */
+     (#/details) the tin slides aside and they stack beside it, one card at a time, in the order
+     picked; tapping a pick in the tin brings its card to the front instead. Submit sends the
+     card off and burns its pick (both answers optional; an unnamed "Other" needs its name);
+     Back brings the last one submitted back. ---------- */
 
   const details = (() => {
     const column = $('#picks');
@@ -2990,12 +2996,9 @@
         if (next) next.focus();
         else e.target.blur();
       });
-      // the last answer given (Enter, or clicking away): this one's done
-      card.querySelector('[name="reason"]').addEventListener('change', () => { if (filled(p)) picker.burnOne(p); });
       return card;
     }
 
-    const filled = (p) => !!(p.variation.trim() || p.reason.trim() || (p.other && p.customName));
     // required on a card: only what it is, for an unnamed "Other" (the why is optional); not while debugging
     const ready = (p) => debug || !p.other || !!p.customName;
 
@@ -3008,18 +3011,38 @@
       if (empty) el.value = '';
     }
 
+    // Submitted cards (their pick burnt: p.ashed, which is saved with the progress) have slid off
+    // to the right, the latest on top, so Back brings it back in over the pile. The pile is the
+    // rest: the one chosen in front, then the others in the order they were picked.
+    const isDone = (p) => !!p.ashed;
+    let doneOrder = []; // the order they were submitted in (after a reload: the order picked)
+    function lastDone() {
+      const known = doneOrder.filter(isDone);
+      const rest = order.filter((p) => isDone(p) && !known.includes(p));
+      return [...rest, ...known].pop() || null;
+    }
+    // the next card not yet submitted after card i (round the end), or -1
+    function following(i) {
+      for (let k = 1; k <= order.length; k++) {
+        const j = (i + k) % order.length;
+        if (!isDone(order[j])) return j;
+      }
+      return -1;
+    }
+
     // Front card on top; the rest sit behind it, each nudged slightly down-right.
     function render() {
       const n = order.length;
+      const pile = order.filter((p) => !isDone(p));
+      const front = Math.max(0, pile.indexOf(order[active]));
+      const stacked = [...order.filter(isDone).filter((p) => !doneOrder.includes(p)), ...doneOrder.filter(isDone)];
       order.forEach((p, i) => {
         const card = cards.get(p);
         card.querySelectorAll('.card__input').forEach(fit);
-        // the ones already done have slid off to the right (above the rest, so Back brings
-        // one back in over the pile); the pile is what's left, front first
-        const gone = i < active;
-        const depth = gone ? 0 : i - active;
+        const gone = isDone(p);
+        const depth = gone ? 0 : (pile.indexOf(p) - front + pile.length) % pile.length;
         card.style.setProperty('--depth', Math.min(depth, 3));
-        card.style.zIndex = gone ? n + 1 + i : n - depth;
+        card.style.zIndex = gone ? n + 1 + stacked.indexOf(p) : n - depth;
         card.classList.toggle('is-gone', gone);
         card.classList.toggle('is-front', !gone && depth === 0);
         card.classList.toggle('is-buried', depth > 3);
@@ -3059,30 +3082,51 @@
       else if (active >= order.length) active = Math.max(0, order.length - 1);
     }
 
-    // Continue: the next card (this one's pick burns now, if it hasn't yet, answered or not); after the last, on.
+    // Submit: this card slides off and its pick burns in the tin; the next one not yet
+    // submitted comes to the front. After the last, on to the questions.
     function next() {
       const p = order[active];
       if (leaving || !p || !ready(p)) return;
       picker.burnOne(p);
-      if (active < order.length - 1) {
-        active++;
-        render();
-        focusFront();
-      } else {
-        finish();
+      doneOrder = [...doneOrder.filter((q) => q !== p), p];
+      const up = following(active);
+      if (up < 0) {
+        finish(); // the last card stays up and leaves with the column
+        return;
       }
+      active = up;
+      render();
+      focusFront();
     }
-    // Back: the card before; from the first, back to picking.
+    // Back: the last card submitted comes back (its pick with it); with none, back to picking.
     function back() {
       if (leaving) return;
-      if (active > 0) {
-        active--;
-        render();
-        focusFront();
-      } else {
+      const p = lastDone();
+      if (!p) {
         go('pick');
+        return;
       }
+      reopen(p);
+      render();
+      focusFront();
     }
+    function reopen(p) {
+      picker.unburn(p);
+      doneOrder = doneOrder.filter((q) => q !== p);
+      active = order.indexOf(p);
+    }
+    // A pick tapped in the tin: its card comes to the front, to be filled in next.
+    function choose(p) {
+      const i = order.indexOf(p);
+      if (leaving || column.hidden || i < 0 || isDone(p) || i === active) return;
+      active = i;
+      render();
+      focusFront();
+    }
+    stage.addEventListener('click', (e) => {
+      const el = e.target.closest('.pill.is-picked');
+      if (el?._pill) choose(el._pill);
+    });
 
     // Tin and cards side by side, centred together; on narrow screens the cards go under the tin.
     const SIDE_GAP = 56;
@@ -3109,8 +3153,13 @@
     let resumeAt = null; // the card that was up before a reload
     function show(atEnd = false) {
       column.hidden = false;
-      active = resumeAt ?? (atEnd ? Math.max(0, order.length - 1) : 0);
+      doneOrder = doneOrder.filter(isDone); // back to picking unburns them all
+      if (atEnd && lastDone()) reopen(lastDone()); // back from the questions: the last one up again
+      else active = resumeAt ?? 0;
       active = Math.min(active, Math.max(0, order.length - 1));
+      if (order[active] && isDone(order[active])) active = following(active);
+      if (active < 0 && lastDone()) reopen(lastDone()); // all submitted (a reload): the last one up
+      active = Math.max(0, active);
       resumeAt = null;
       render();
       place();
@@ -3400,11 +3449,13 @@
       if (el.tagName === 'OPTION') el.textContent = oneLang(el) ? t(el.dataset.t, qLang) : joined(el.dataset.t);
       else fill(el, el.dataset.t);
     });
+    // These read as one line, Chinese then English, with no slash between them: the search field
+    // and the nickname (a space), the last thoughts (none, after the Chinese "！").
+    const RUN_ON = { 'pick.searchPlaceholder': ' ', 'about.nicknamePlaceholder': ' ', 'about.thoughtsPlaceholder': '' };
     root.querySelectorAll('[data-t-placeholder]').forEach((el) => {
       const path = el.dataset.tPlaceholder;
-      // The search field reads as one line: Chinese, then English, with no slash.
-      el.placeholder = path === 'pick.searchPlaceholder'
-        ? `${t(path, 'zh')} ${t(path, 'en')}`
+      el.placeholder = path in RUN_ON
+        ? `${t(path, 'zh')}${RUN_ON[path]}${t(path, 'en')}`
         : joined(path);
     });
     root.querySelectorAll('[data-t-aria]').forEach((el) => { el.setAttribute('aria-label', joined(el.dataset.tAria)); });
@@ -3429,8 +3480,8 @@
     else if (next === (inQuestions(btn) ? qLang : itemLang())) return;
     qLang = next;
     try {
-      if (qLang) localStorage.setItem(QLANG_KEY, qLang);
-      else localStorage.removeItem(QLANG_KEY);
+      if (qLang) sessionStorage.setItem(QLANG_KEY, qLang);
+      else sessionStorage.removeItem(QLANG_KEY);
     } catch (_) { /* storage unavailable */ }
     applyQLang();
     applyText(questions); // answers stay as they are; only the words around them change

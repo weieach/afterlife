@@ -1072,8 +1072,9 @@ body:has(.screen--intro:not([hidden])) .debug-switch { top: calc(var(--topbar-pa
   padding-bottom: 48px;
 }
 .demo__consents { display: flex; flex-direction: column; gap: 12px; }
-/* checkbox questions: the text on the left, the box at the right edge */
-.demo__consents .choice { flex-direction: row-reverse; justify-content: space-between; gap: 24px; }
+/* a field with the boxes that go with it (the nickname and the gallery choices): closer together
+   than the questions round them */
+.demo__set { display: flex; flex-direction: column; gap: 28px; }
 .field textarea {
   font: inherit;
   font-size: 16px;
@@ -1136,6 +1137,9 @@ body:has(.screen--intro:not([hidden])) .debug-switch { top: calc(var(--topbar-pa
 .is-reviewing .stage .wedges,
 .is-reviewing .stage .wedge-tags,
 .is-reviewing .stage .pill:not(.is-picked) { opacity: 0; pointer-events: none; }
+/* the picks in the tin can be tapped: that one's card comes to the front (app.js, choose) */
+.screen--pick.is-reviewing .stage .pill.is-picked:not(.is-leaving) { pointer-events: auto; cursor: pointer; }
+.screen--pick.is-reviewing .stage .pill.is-picked:not(.is-leaving):hover .pill__img { filter: drop-shadow(0 8px 14px rgba(0, 0, 0, .3)); }
 
 /* title, the stack, Back / Continue; left / top set in app.js (under the tin on narrow screens) */
 .picks {
@@ -1243,8 +1247,10 @@ a.btn { display: inline-block; text-align: center; text-decoration: none; }
 .screen--results .topbar .btn.btn--outline { color: var(--fg); border-color: var(--fg); }
 .screen--results .topbar .btn.btn--outline:not(:disabled):hover { background: var(--fg); color: var(--bg); }
 .screen--results .topbar :focus-visible { outline-color: var(--fg); }
+/* "Take the survey": its Chinese a little larger */
+.results__take .bi__zh { font-size: 1.15em; }
 
-/* The title and ∞, condensed into the header once the big ones have scrolled under it
+/* The title (not the ∞), condensed into the header once the big one has scrolled under it
    (results.js sets --p, 0 to 1, as the big title passes the header's bottom edge): centred
    in the header row, rising in from below it. Up to 900px wide there's no room between the
    logo and the button, so it rises into a slim strip just under the header instead. */
@@ -1265,19 +1271,19 @@ a.btn { display: inline-block; text-align: center; text-decoration: none; }
 .results-mini__inner {
   display: flex;
   align-items: center;
-  gap: .55em;
-  padding: 0 14px; /* room for the ∞'s dots when they scatter */
   white-space: nowrap;
-  font-size: 17px;
+  font-size: 18px; /* the Chinese as the logo's first line (.brand), phones too (below) */
   line-height: 1.2;
   opacity: var(--p);
   transform: translateY(calc((1 - var(--p)) * 120%));
 }
-.results-mini__mark { position: relative; flex: none; width: 1.5em; height: .6em; font-size: 26px; line-height: 1; }
-.results-mini__mark canvas { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
 .results-mini__title.bi > span { display: inline; }
-.results-mini__title .bi__zh { margin-right: .45em; font-weight: 500; }
-.results-mini__title .bi__en { font-family: "scatterplot-vf", var(--font); font-weight: 300; }
+.results-mini__title .bi__zh { margin-right: .45em; }
+/* the English nearly as tall as the Chinese, standing on the Chinese characters' bottom edge:
+   Scatterplot's capitals are .683em tall, the Chinese .905em (.746 above the line, .159 below).
+   At 1.22× its capitals reach about 92% of the way up; it sits .159 of the Chinese's em
+   (.13 of its own) lower */
+.results-mini__title .bi__en { font-family: "scatterplot-vf", var(--font); font-weight: 300; font-size: 1.22em; vertical-align: -.13em; }
 @media (max-width: 900px) {
   .results-mini {
     top: 100%;
@@ -1289,8 +1295,8 @@ a.btn { display: inline-block; text-align: center; text-decoration: none; }
     justify-content: center;
     background: rgb(255 255 255 / var(--p));
   }
-  .results-mini__inner { font-size: 15px; }
 }
+@media (max-width: 700px) { .results-mini__inner { font-size: 13px; } }
 
 .results { padding-bottom: 96px; }
 .results__intro { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: clamp(24px, 4vw, 56px); }

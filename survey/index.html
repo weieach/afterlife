@@ -130,7 +130,7 @@
       </div>
       <div class="demo__nav picks__nav">
         <button class="btn btn--outline" type="button" id="details-back" data-t="ui.back"></button>
-        <button class="btn" type="button" id="details-next" data-t="details.continue"></button>
+        <button class="btn" type="button" id="details-next" data-t="ui.submit"></button>
       </div>
     </div>
 
@@ -185,13 +185,14 @@
             <span class="field__label is-required" data-t="about.age"></span>
             <select name="age" required>
               <option value="" selected disabled data-t="about.agePlaceholder"></option>
-              <option value="under-18" data-t="about.ageRanges.under-18"></option>
-              <option value="18-24" data-t="about.ageRanges.18-24"></option>
-              <option value="25-34" data-t="about.ageRanges.25-34"></option>
-              <option value="35-44" data-t="about.ageRanges.35-44"></option>
-              <option value="45-54" data-t="about.ageRanges.45-54"></option>
-              <option value="55-64" data-t="about.ageRanges.55-64"></option>
-              <option value="65-plus" data-t="about.ageRanges.65-plus"></option>
+              <!-- just the numbers, the same in both languages -->
+              <option value="under-18">&lt;18</option>
+              <option value="18-24">18–24</option>
+              <option value="25-34">25–34</option>
+              <option value="35-44">35–44</option>
+              <option value="45-54">45–54</option>
+              <option value="55-64">55–64</option>
+              <option value="65-plus">65+</option>
             </select>
           </label>
 
@@ -236,18 +237,21 @@
              only when there are custom items. -->
         <div class="demo__optional demo__step" data-step="2">
           <p class="demo__divider" data-t="about.galleryNote"></p>
-          <label class="field">
-            <span class="field__label" data-t="about.nickname"></span>
-            <input type="text" name="nickname" maxlength="40" autocomplete="nickname">
-          </label>
-          <div class="demo__consents">
-            <label class="choice"><input type="checkbox" name="publish" checked> <span data-t="about.publish"></span></label>
-            <label class="choice"><input type="checkbox" name="showReasons" checked> <span data-t="about.showReasons"></span></label>
-            <label class="choice" id="share-custom"><input type="checkbox" name="shareCustom" checked> <span data-t="about.shareCustom"></span></label>
+          <!-- the nickname and what may be shown in the gallery: one group -->
+          <div class="demo__set">
+            <label class="field">
+              <span class="field__label" data-t="about.nickname"></span>
+              <input type="text" name="nickname" maxlength="40" autocomplete="nickname" data-t-placeholder="about.nicknamePlaceholder">
+            </label>
+            <div class="demo__consents">
+              <label class="choice"><input type="checkbox" name="publish" checked> <span data-t="about.publish"></span></label>
+              <label class="choice"><input type="checkbox" name="showReasons" checked> <span data-t="about.showReasons"></span></label>
+              <label class="choice" id="share-custom"><input type="checkbox" name="shareCustom" checked> <span data-t="about.shareCustom"></span></label>
+            </div>
           </div>
           <label class="field">
             <span class="field__label" data-t="about.thoughts"></span>
-            <textarea name="thoughts" rows="4"></textarea>
+            <textarea name="thoughts" rows="4" data-t-placeholder="about.thoughtsPlaceholder"></textarea>
           </label>
         </div>
 

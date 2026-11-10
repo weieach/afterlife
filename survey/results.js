@@ -132,6 +132,30 @@
     return wrap;
   }
 
+  // Write-ins' noise fields flow slowly (half the survey's pace), each from its own patch. Only
+  // the ones on screen are redrawn, on one shared loop; held still when motion is reduced.
+  const FLOW = 0.5;
+  const calm = matchMedia('(prefers-reduced-motion: reduce)');
+  const flowing = new Map(); // canvas -> its look (noise.js variant)
+  const inView = new Set();
+  let flowRaf = 0;
+  function flow(time) {
+    for (const c of inView) {
+      if (!c.isConnected) { inView.delete(c); flowing.delete(c); continue; }
+      window.SURVEY_NOISE.draw(c, time * FLOW, flowing.get(c));
+    }
+    flowRaf = inView.size && !calm.matches ? requestAnimationFrame(flow) : 0;
+  }
+  const startFlow = () => { if (!flowRaf && inView.size && !calm.matches) flowRaf = requestAnimationFrame(flow); };
+  const seen = 'IntersectionObserver' in window ? new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting) inView.add(e.target);
+      else inView.delete(e.target);
+    }
+    startFlow();
+  }) : null;
+  calm.addEventListener?.('change', startFlow);
+
   // The item's cutout on its category colour; a write-in gets every colour at once.
   function thumb(pick, cls) {
     const box = el('span', `thumb ${cls}`);
@@ -142,8 +166,11 @@
       // a write-in: the survey's noise field (noise.js), a different patch for each one, dealt afresh on every load
       const c = el('canvas', 'thumb__noise');
       c.width = c.height = window.SURVEY_NOISE.PX;
-      window.SURVEY_NOISE.draw(c, 0, window.SURVEY_NOISE.variant());
+      const look = window.SURVEY_NOISE.variant();
+      window.SURVEY_NOISE.draw(c, performance.now() * FLOW, look);
       box.append(c);
+      flowing.set(c, look);
+      seen?.observe(c);
     }
     const src = pick.id !== 'other' && cutoutUrl(pick.id);
     if (src) {
@@ -252,10 +279,9 @@
   applyText(document);
   render();
 
-  // Scrolling down, the title and ∞ condense into the header: as the big title passes under the
-  // header, the small copy rises into it (--p: 0 hidden, 1 in place). Scrolling back reverses it.
+  // Scrolling down, the title condenses into the header (without the ∞): as the big title passes
+  // under the header, the small copy rises into it (--p: 0 hidden, 1 in place). Scrolling back reverses it.
   const mini = $('.results-mini');
-  mini.firstElementChild.prepend(window.makeInfinity('results-mini__mark'));
   const head = $('.screen--results .topbar');
   const bigTitle = $('#results-headline');
   let miniRaf = 0;

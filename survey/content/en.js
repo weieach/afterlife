@@ -73,7 +73,6 @@ window.SURVEY_CONTENT.en = {
 
   details: {
     title: 'Your picks',
-    continue: 'Continue',
     otherName: 'What is it?',
     otherNamePlaceholder: 'Name the item',
     variation: 'Is there a specific variation of this item you want?',
@@ -88,22 +87,15 @@ window.SURVEY_CONTENT.en = {
     saveError: 'Your answers couldn’t be sent. Check your connection and press Submit again.',
     researchNote: 'Thank you for supporting my design capstone project! This survey is strictly for cultural background research and will never be publicly displayed or linked to your selected items.',
     galleryNote: 'To make this experience more fun, everyone’s selections are shared on a public gallery page. To keep your selections private, check the options below.',
-    nickname: 'A nickname to show with your list in the gallery',
-    publish: 'Show my wishlist on the public results page',
+    nickname: 'A display nickname for the gallery',
+    nicknamePlaceholder: 'Any name', // after the Chinese, as one line
+    publish: 'Show my selection on the public gallery page',
     showReasons: 'Show why I picked each item',
     shareCustom: 'Add my custom items to the selection, for other people to choose',
     thoughts: 'Any more thoughts to share?',
+    thoughtsPlaceholder: 'Great project / I’ve seen worse!', // after the Chinese, as one line
     age: 'How old are you?',
     agePlaceholder: 'Select an age range',
-    ageRanges: {
-      'under-18': 'Under 18',
-      '18-24': '18–24',
-      '25-34': '25–34',
-      '35-44': '35–44',
-      '45-54': '45–54',
-      '55-64': '55–64',
-      '65-plus': '65 or older',
-    },
     heritage: 'Which of the following best describes your cultural background?',
     // saved in `heritage`; older responses may hold 'born-in-china' (born and raised there, wherever they live now)
     heritageOptions: {

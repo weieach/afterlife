@@ -1,7 +1,7 @@
 // The soft noise field behind typed-in ("Other") items: drawn small and stretched, so it comes
 // out as a gradient drifting through all the category colours; the field is warped by more
 // noise, so it swirls rather than shimmers. Shared by the survey (app.js, drifting) and the
-// results page (results.js, still, a different variant for every write-in on each load).
+// results page (results.js, flowing at half the pace, a different variant for every write-in on each load).
 window.SURVEY_NOISE = (() => {
   'use strict';
 
