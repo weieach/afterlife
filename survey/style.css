@@ -1511,17 +1511,17 @@ span.cat-chip.bi { display: inline-flex; }
   body[data-lang="en"] .pill .pill__zh:has(+ .pill__en) { display: none; }
   /* items of the biggest categories (app.js, BIG_CAT): their names a touch smaller */
   .pill.pill--big-cat,
-  .stage.is-searching .pill.pill--big-cat:not(.is-picked) { font-size: 10px; }
-  .pill.pill--big-cat .pill__zh { font-size: 8.5px; }
-  .pill { font-size: 11px; padding: 4px 11px; max-width: 120px; }
-  .pill__zh { font-size: 9px; }
+  .stage.is-searching .pill.pill--big-cat:not(.is-picked) { font-size: 11px; }
+  .pill.pill--big-cat .pill__zh { font-size: 9.5px; }
+  .pill { font-size: 12px; padding: 4px 11px; max-width: 130px; }
+  .pill__zh { font-size: 10px; }
   /* searching: the loose items stay small too (the desktop sizes follow the screen's width) */
-  .stage.is-searching .pill:not(.is-picked) { font-size: 11px; }
-  .stage.is-searching .pill:not(.is-picked):not(.as-thumb) { max-width: 120px; }
+  .stage.is-searching .pill:not(.is-picked) { font-size: 12px; }
+  .stage.is-searching .pill:not(.is-picked):not(.as-thumb) { max-width: 130px; }
   .pill.as-thumb .pill__en,
   .pill.as-thumb .pill__zh,
   .stage.is-searching .pill.as-thumb .pill__en,
-  .stage.is-searching .pill.as-thumb .pill__zh { max-width: 100px; }
+  .stage.is-searching .pill.as-thumb .pill__zh { max-width: 110px; }
   .pill.pill--other.is-cast:not(.is-picked),
   .stage.is-searching .pill.pill--other.is-cast:not(.is-picked) { max-width: 170px; font-size: 15px; }
   /* the tin's prompt */

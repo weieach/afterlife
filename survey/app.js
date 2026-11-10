@@ -2225,10 +2225,10 @@
       });
     }
     // Fit inside a square box, so tall cutouts (the cane) don't tower over the rest. A little
-    // larger while searching, where the box follows the screen's width. A fifth smaller on phones.
+    // larger while searching, where the box follows the screen's width. A little smaller on phones.
     const thumbBox = () => {
       const box = searchMode ? Math.min(150, Math.max(90, W * 0.095)) : Math.min(110, R * 0.5);
-      return Math.round(W <= 700 ? box * 0.8 : box);
+      return Math.round(W <= 700 ? box * 0.92 : box);
     };
     function sizeThumb(p) {
       const img = p.thumbImg;
