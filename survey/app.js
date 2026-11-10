@@ -732,7 +732,7 @@
     const left = Math.min(...rs.map((r) => r.left)), right = Math.max(...rs.map((r) => r.right));
     const top = Math.min(...rs.map((r) => r.top)), bottom = Math.max(...rs.map((r) => r.bottom));
     const dx = innerWidth / 2 - (left + right) / 2;
-    let dy = innerHeight * 0.36 - (top + bottom) / 2; // its middle at 36% down the screen
+    let dy = innerHeight * 0.29 - (top + bottom) / 2; // its middle at 29% down the screen
     // The landing can is still on screen: sit the question a little above it, not on it.
     if (tin) {
       const tr = tin.getBoundingClientRect();
@@ -2296,14 +2296,19 @@
     const ROW_PAD_PHONE = 12; // less room under the row on phones
     const CLEAR_GAP = 8; // px between the field and the ×, as in style.css
     const narrow = matchMedia('(max-width: 700px)'); // phones, as in style.css
-    const rowPad = () => (narrow.matches ? ROW_PAD_PHONE : ROW_PAD);
+    // The note sits in the margin under the field, NOTE_GAP below it; the field rises to leave
+    // room for it (and as much again under it) where that margin is thin.
+    const NOTE_GAP = 6;
+    const noteEl = $('#pick-note');
+    const noteRoom = () => noteEl.offsetHeight + 2 * NOTE_GAP;
+    const rowPad = () => (narrow.matches ? Math.max(ROW_PAD_PHONE, noteRoom()) : ROW_PAD);
     // Where the field's top edge goes. Wider screens: a share of the screen's height, so it keeps
     // its place as the screen gets taller or shorter (at least 12px of room left under it).
     // Phones: a fixed gap above the bottom.
     const FIELD_TOP = 0.9;
     function fieldTopAt(fieldH) {
       if (narrow.matches) return H - rowPad() - fieldH;
-      return Math.min(H * FIELD_TOP, H - fieldH - 12);
+      return Math.min(H * FIELD_TOP, H - fieldH - Math.max(12, noteRoom()));
     }
     let searchWall = null;
     const wallOpts = { isStatic: true, collisionFilter: { group: 0, category: CAT.DISK, mask: CAT.OUT } };
@@ -2325,9 +2330,15 @@
         if (left < 16) left = 16;
         if (left + width + side > W - 16) { width = W - 32 - side; left = 16; }
       }
+      // the note: centred under the field (phones: across the whole row, so it wraps less); its
+      // width first, since its height (two lines or one) sets the room left for it
+      Object.assign(noteEl.style, narrow.matches
+        ? { left: '16px', width: `${W - 32}px` }
+        : { left: `${left}px`, width: `${width}px` });
       const pad = rowPad();
       const bottom = H > window.innerHeight ? Math.min(H - pad, cy + R + 32 + fieldH) : fieldTopAt(fieldH) + fieldH;
       Object.assign(searchEl.style, { width: `${width}px`, left: `${left}px`, bottom: `${H - bottom}px` });
+      noteEl.style.top = `${bottom + NOTE_GAP}px`;
       searchEl.style.setProperty('--search-side', `${side}px`); // phones: the list spreads past the field by this, both sides
       if (!searchMode) return;
       const stageRect = stage.getBoundingClientRect();
@@ -3387,19 +3398,8 @@
 
   document.title = joined('meta.title');
   applyText(document);
-  // Under the pick page's question: a note with an info icon. Inside the heading, so the tin
-  // keeps clear of it and it moves with the question (entrance, hover outline, fading out).
-  {
-    const note = document.createElement('span');
-    note.className = 'headline__note';
-    note.setAttribute('role', 'note');
-    note.lang = 'en';
-    note.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7"/><path d="M8 7v4.5"/><circle class="dot" cx="8" cy="4.6" r=".9"/></svg>';
-    const text = document.createElement('span');
-    text.textContent = t('pick.note', 'en');
-    note.append(text);
-    $('[data-screen="pick"] .headline').append(note);
-  }
+  // the note under the pick page's search field (English only; placed with the field in app.js)
+  $('#pick-note-text').textContent = t('pick.note', 'en');
   intro.render();
   picker.relabelAll();
   loadProgress();

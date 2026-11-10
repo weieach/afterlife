@@ -19,6 +19,13 @@
   <div class="screen screen--results">
     <header class="topbar">
       <a class="brand" href="index.html" data-t="brand"></a>
+      <!-- the title and ∞ condensed: rise into the header as the big ones scroll under it (results.js).
+           A copy of the h1, so hidden from screen readers. -->
+      <div class="results-mini" aria-hidden="true">
+        <div class="results-mini__inner">
+          <span class="results-mini__title" data-t="results.headline"></span>
+        </div>
+      </div>
       <div class="topbar__actions">
         <a class="btn btn--outline" href="index.html#/start" data-t="results.takeSurvey"></a>
       </div>

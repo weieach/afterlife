@@ -252,6 +252,26 @@
   applyText(document);
   render();
 
+  // Scrolling down, the title and ∞ condense into the header: as the big title passes under the
+  // header, the small copy rises into it (--p: 0 hidden, 1 in place). Scrolling back reverses it.
+  const mini = $('.results-mini');
+  mini.firstElementChild.prepend(window.makeInfinity('results-mini__mark'));
+  const head = $('.screen--results .topbar');
+  const bigTitle = $('#results-headline');
+  let miniRaf = 0;
+  function syncMini() {
+    miniRaf = 0;
+    const edge = head.getBoundingClientRect().bottom;
+    const r = bigTitle.getBoundingClientRect();
+    const p = Math.min(1, Math.max(0, (edge - r.top) / (r.height || 1)));
+    mini.style.setProperty('--p', p.toFixed(3));
+    mini.classList.toggle('is-on', p > 0);
+  }
+  const queueMini = () => { if (!miniRaf) miniRaf = requestAnimationFrame(syncMini); };
+  addEventListener('scroll', queueMini, { passive: true });
+  addEventListener('resize', queueMini);
+  syncMini();
+
   /* ---------- load ---------- */
 
   mine = window.SURVEY_DB.mine();
