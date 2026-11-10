@@ -107,6 +107,11 @@
   // Categories: en.js decides the list and each item's category. catName gives [English, Chinese].
   const CATS = CONTENT.en.categories || [];
   const catOf = new Map(CONTENT.en.items.map((it) => [it.id, it.category]));
+  // categories with BIG_CAT items or more on offer (Luxuries, Personal care, Food): their names
+  // are a touch smaller on phones (style.css), since so many drop in at once
+  const BIG_CAT = 12;
+  const bigCats = new Set(CATS.map((c) => c.id).filter((id) =>
+    CONTENT.en.items.filter((it) => it.category === id && !it.retired).length >= BIG_CAT));
   const catName = (id) => {
     const en = CATS.find((c) => c.id === id)?.name ?? id;
     return [en, (CONTENT.zh?.categories || []).find((c) => c.id === id)?.name ?? en];
@@ -1152,7 +1157,10 @@
     const fullyInside = (p) => distTo(p.body.position, cx, cy) + Math.max(p.w, p.h) / 2 < innerR() - GAP;
     const RING_CLEAR = 20; // margin between loose pills and the category ring (the pile presses ~10px of it away)
     // Loose pills stay this far from the tin's centre: just past its rim, or past the category ring when it's up.
-    const keepOut = () => (catMode ? ringBand().outer + RING_CLEAR : R + GAP);
+    // Phones, searching: well inside the rim (TIN_SOFT of it), so a big category dropping in has
+    // more room, its items free to lie over the tin's edge.
+    const TIN_SOFT = 0.8;
+    const keepOut = () => (catMode ? ringBand().outer + RING_CLEAR : W <= 700 ? R * TIN_SOFT : R + GAP);
 
     function setMode(p, mode) {
       p.mode = mode;
@@ -1341,7 +1349,7 @@
 
     function createPill({ id = null, other = false } = {}) {
       const el = document.createElement('div');
-      el.className = 'pill' + (other ? ' pill--other' : '');
+      el.className = 'pill' + (other ? ' pill--other' : '') + (bigCats.has(catOf.get(id)) ? ' pill--big-cat' : '');
       el.tabIndex = 0;
       el.setAttribute('role', 'button');
       stage.appendChild(el);
@@ -2317,12 +2325,11 @@
       searchWall = null;
       if (!W) return;
       const fieldH = searchField.offsetHeight || 68;
-      const side = CLEAR_GAP + fieldH; // the × is square, as tall as the field
+      const side = narrow.matches ? 0 : CLEAR_GAP + fieldH; // phones keep the × inside the field
       let width, left;
       if (narrow.matches) {
-        // phones: the field centred with equal gaps either side, the × sitting in the right one
-        // (so nothing shifts when it appears)
-        left = 16 + side;
+        // phones: align the field with the header's page margins
+        left = parseFloat(getComputedStyle(pickScreen).paddingLeft);
         width = W - 2 * left;
       } else {
         width = Math.min(W - 32 - side, Math.max(300, Math.round(2.2 * R)));
@@ -2333,7 +2340,7 @@
       // the note: centred under the field (phones: across the whole row, so it wraps less); its
       // width first, since its height (two lines or one) sets the room left for it
       Object.assign(noteEl.style, narrow.matches
-        ? { left: '16px', width: `${W - 32}px` }
+        ? { left: `${left}px`, width: `${width}px` }
         : { left: `${left}px`, width: `${width}px` });
       const pad = rowPad();
       const bottom = H > window.innerHeight ? Math.min(H - pad, cy + R + 32 + fieldH) : fieldTopAt(fieldH) + fieldH;

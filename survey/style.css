@@ -726,6 +726,8 @@ html.is-snapping { scroll-snap-type: y mandatory; }
    categories and items rises from it, see-through enough to show the tin behind.
    Width and position come from app.js (placeSearch). */
 .search {
+  --field-height: max(calc(var(--intro-text) * 2.3 + 6px), 6vh);
+  --field-height: max(calc(var(--intro-text) * 2.3 + 6px), 6dvh);
   position: absolute;
   z-index: 4;
   display: flex;
@@ -737,6 +739,7 @@ html.is-snapping { scroll-snap-type: y mandatory; }
   z-index: 1; /* over the list as it slides up out from behind it */
   display: block;
   width: 100%;
+  height: var(--field-height);
   margin: 0;
   padding: .5em .8em;
   border: 3px solid var(--fg);
@@ -749,9 +752,9 @@ html.is-snapping { scroll-snap-type: y mandatory; }
 }
 /* "Clear screen": a square × button just right of the field, drawn like the settings button
    (outline, icon in the middle, fills on hover) with the field's border, as tall as the field
-   (its text line + padding + borders). app.js leaves room for it (CLEAR_GAP). */
+   (including its viewport-based height). app.js leaves room for it (CLEAR_GAP). */
 .search__clear {
-  --size: calc(var(--intro-text) * 2.3 + 6px);
+  --size: var(--field-height);
   position: absolute;
   bottom: 0;
   left: calc(100% + 8px);
@@ -1482,16 +1485,23 @@ span.cat-chip.bi { display: inline-flex; }
   html:has(.screen--pick:not([hidden]):not(.is-reviewing)) body { overflow: hidden; overscroll-behavior: none; }
   /* with the keyboard up the list covers the question and the tin: solid, so it reads */
   .search__list { background: var(--bg); }
-  /* the field is narrower here (centred, the × in the gap on its right; app.js): the hint is
-     smaller to fit. Typed text stays 16px: below that, iPhones zoom the page in on tap. */
-  .search__field { font-size: 16px; padding: .45em .7em; }
-  /* the list keeps the whole row's width (past the field equally both sides), with a bottom edge where it overhangs */
-  .search__list { margin: 0 calc(-1 * var(--search-side, 0px)); border-bottom: 1px solid var(--fg); }
-  .search__field::placeholder { font-size: 13px; }
-  /* the × as tall as the field (16px line + padding + borders), with a finer outline and × */
-  .search__clear { --size: calc(16px * 2.2 + 6px); border-width: 1.5px; }
+  /* Full-width within the page margins, with a generous touch target and larger text. */
+  .search { --field-height: 56px; }
+  .search__field { font-size: 18px; padding: .45em .7em; }
+  .search:has(.search__clear:not([hidden])) .search__field { padding-right: var(--field-height); }
+  .search__list { margin: 0; border-bottom: 1px solid var(--fg); }
+  .search__field::placeholder { font-size: 18px; }
+  /* Keep the clear control inside the field so it doesn't reduce the field's width. */
+  .search__clear { left: auto; right: 0; z-index: 2; border-width: 0; background: transparent; }
   .search__clear svg { stroke-width: 1.5; }
   .pick-note { font-size: 11px; }
+  /* searching, loose items can lie over the tin's edge (app.js, TIN_SOFT): they go behind it.
+     The tin lets taps through, so they can still be picked there; one being dragged comes in front. */
+  .stage.is-searching .pill:not(.is-picked):not(.is-dragging) { z-index: -1; }
+  /* items of the biggest categories (app.js, BIG_CAT): their names a touch smaller */
+  .pill.pill--big-cat,
+  .stage.is-searching .pill.pill--big-cat:not(.is-picked) { font-size: 10px; }
+  .pill.pill--big-cat .pill__zh { font-size: 8.5px; }
   .pill { font-size: 11px; padding: 4px 11px; max-width: 120px; }
   .pill__zh { font-size: 9px; }
   /* searching: the loose items stay small too (the desktop sizes follow the screen's width) */
