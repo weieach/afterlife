@@ -79,6 +79,8 @@ a.brand { color: inherit; text-decoration: none; }
 }
 .lang-switch button[aria-pressed="true"] { opacity: 1; text-decoration: underline; text-underline-offset: 3px; cursor: default; }
 .lang-switch button:not([aria-pressed="true"]):hover { opacity: 1; }
+/* desktop, in the questions' top bar: Back's padding round it (.btn: 12px 28px) */
+@media (min-width: 701px) { .topbar > .lang-switch { padding: 12px 28px; } }
 .topbar__nav { display: flex; align-items: center; gap: 8px; }
 .topbar .btn { background: #fff; color: #000; border-color: #fff; }
 .topbar .btn:not(:disabled):hover { background: #000; color: #fff; border-color: #fff; }
@@ -1042,6 +1044,10 @@ body:has(.screen--intro:not([hidden])) .debug-switch { top: calc(var(--topbar-pa
   white-space: nowrap;
 }
 .settings .switch { justify-content: space-between; gap: 24px; }
+/* phones only: the language of the floating items' names (and the questions) */
+.settings__lang { display: flex; align-items: baseline; justify-content: space-between; gap: 24px; }
+.settings__lang .lang-switch { margin-left: 0; font-size: inherit; }
+@media (min-width: 701px) { .settings__phone { display: none; } }
 /* the mode: one of two, as radio buttons; a hairline under it */
 .settings__modes { display: flex; flex-direction: column; gap: 12px; }
 .settings__head { margin: 0 0 -2px; color: var(--muted); }
@@ -1498,6 +1504,10 @@ span.cat-chip.bi { display: inline-flex; }
   /* searching, loose items can lie over the tin's edge (app.js, TIN_SOFT): they go behind it.
      The tin lets taps through, so they can still be picked there; one being dragged comes in front. */
   .stage.is-searching .pill:not(.is-picked):not(.is-dragging) { z-index: -1; }
+  /* the floating items' names in one language (settings, or the questions' 中文 / EN): the
+     other line goes, wherever there are two (a typed-in name has only the one) */
+  body[data-lang="zh"] .pill .pill__zh + .pill__en,
+  body[data-lang="en"] .pill .pill__zh:has(+ .pill__en) { display: none; }
   /* items of the biggest categories (app.js, BIG_CAT): their names a touch smaller */
   .pill.pill--big-cat,
   .stage.is-searching .pill.pill--big-cat:not(.is-picked) { font-size: 10px; }

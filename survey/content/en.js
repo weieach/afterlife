@@ -60,6 +60,7 @@ window.SURVEY_CONTENT.en = {
     mode: 'How to find items',
     showEverything: 'Show all objects', // categorization: every item out round the tin, by category
     textOnly: 'Show text only',
+    language: 'Language', // phones: which language the floating items' names (and the questions later) are in
     showAll: 'Show all categories',
     search: 'Search mode',
     searchPlaceholder: 'Enter name of item...',

@@ -59,6 +59,7 @@ window.SURVEY_CONTENT.zh = {
     mode: '查找物品的方式',
     showEverything: '全部展示',
     textOnly: '仅显示文字',
+    language: '语言',
     showAll: '显示全部类别',
     search: '搜索模式',
     searchPlaceholder: '输入物品名称',

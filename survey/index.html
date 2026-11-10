@@ -73,6 +73,15 @@
         <input type="checkbox" id="toggle-text" role="switch">
         <span class="switch__track" aria-hidden="true"></span>
       </label>
+      <!-- phones only: the floating items' names in one language, the same choice as the
+           questions' 中文 / EN later on (app.js, qLang) -->
+      <hr class="settings__divider settings__phone">
+      <div class="settings__lang settings__phone">
+        <span data-t="pick.language"></span>
+        <div class="lang-switch" role="group" aria-label="语言 Language">
+          <button type="button" data-lang="zh" lang="zh-CN">中文</button><span aria-hidden="true">/</span><button type="button" data-lang="en" lang="en">EN</button>
+        </div>
+      </div>
     </div>
     <h1 class="headline" data-t="pick.headline"></h1>
     <div class="stage" id="stage">
@@ -185,7 +194,9 @@
             </select>
           </label>
 
-          <fieldset class="field">
+          <!-- cultural background: no longer asked (hidden and disabled, so it's neither required
+               nor sent); remove hidden and disabled to bring it back -->
+          <fieldset class="field" hidden disabled>
             <legend class="field__label is-required" data-t="about.heritage"></legend>
             <label class="choice"><input type="radio" name="heritage" value="in-greater-china" required> <span data-t="about.heritageOptions.in-greater-china"></span></label>
             <label class="choice"><input type="radio" name="heritage" value="first-gen"> <span data-t="about.heritageOptions.first-gen"></span></label>

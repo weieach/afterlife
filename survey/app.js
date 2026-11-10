@@ -54,13 +54,16 @@
     return node;
   }
 
-  /* The questions' language: the browser's at first, then whatever the switch was last set to. */
+  /* One language, for the questions and (on phones) the floating items' names: whatever either
+     switch (the questions' 中文 / EN, the pick screen's settings) was last set to. Until then,
+     Chinese on phones, otherwise the browser's. */
   const QLANG_KEY = 'afterlife-survey-lang';
   let qLang = (() => {
     try {
       const saved = localStorage.getItem(QLANG_KEY);
       if (saved === 'en' || saved === 'zh') return saved;
     } catch (_) { /* storage unavailable */ }
+    if (matchMedia('(max-width: 700px)').matches) return 'zh';
     const first = (navigator.languages && navigator.languages[0]) || navigator.language || '';
     return /^zh\b/i.test(first) ? 'zh' : 'en';
   })();
@@ -1576,6 +1579,21 @@
       return p.goal === 'in' && fullyInside(p);
     }
 
+    // Phones: a dropped category piles up on the tin and down its sides, leaving the space under
+    // it bare. So a sideways "magnet": what sits on the tin's top is eased off towards its nearer
+    // edge, and what's level with or below its middle is drawn in towards the middle, into the
+    // space under it (gravity does the rest). MAGNET is a share of the fall's pull.
+    const MAGNET = 0.9;
+    function underTin(b) {
+      const dx = cx - b.position.x;
+      const f = MAGNET * GRAVITY * b.mass;
+      if (b.position.y > cy) {
+        Body.applyForce(b, b.position, { x: Math.sign(dx) * Math.min(1, Math.abs(dx) / R) * f, y: 0 });
+      } else if (Math.abs(dx) < R) {
+        Body.applyForce(b, b.position, { x: -(Math.sign(dx) || 1) * f, y: 0 });
+      }
+    }
+
     Events.on(engine, 'beforeUpdate', () => {
       for (const p of pills) {
         if (p.filtered) continue; // hidden by a category filter
@@ -1602,7 +1620,10 @@
         } else if (p.falling && (p.mode === 'drop' || p.mode === 'out')) {
           if (p.mode === 'drop' && b.position.y - p.h / 2 > 2) setMode(p, 'out'); // on screen: the walls hold it now
           // on tall phone layouts, stop pulling once it's well past the tin, so nothing sinks out of sight
-          if (H <= window.innerHeight || b.position.y < cy + R + 240) Body.applyForce(b, b.position, { x: 0, y: GRAVITY * b.mass });
+          if (H <= window.innerHeight || b.position.y < cy + R + 240) {
+            Body.applyForce(b, b.position, { x: 0, y: GRAVITY * b.mass });
+            if (p.mode === 'out' && W <= 700) underTin(b);
+          }
         } else if (p.mode === 'in' && distTo(b.position, cx, cy) > innerR()) {
           // knocked through the tin's wall (a fast drag can shove a pick past the thin ring):
           // still a pick, so it glides back in rather than drifting off on its own
@@ -2848,6 +2869,11 @@
           setMode(p, 'transit');
         }
       },
+      // the names changed size (one language or both, on phones): every pill measured again
+      refitAll() {
+        if (running) pills.forEach(fitBody);
+        else stale = true;
+      },
       relabelAll() {
         pills.forEach(relabel);
         refresh();
@@ -3171,8 +3197,7 @@
   function answered(n) {
     if (debug) return true; // debugging: blanks are let through
     switch (n) {
-      case 1: return !!form.elements.age.value // the four required questions, all on page 1 (the afterlife one is optional)
-        && anyChecked('heritage')
+      case 1: return !!form.elements.age.value // the three required questions, all on page 1 (the afterlife one is optional)
         && anyChecked('residence') && (!abroad.checked || !!country.value.trim())
         && anyChecked('burning');
       default: return true;
@@ -3236,7 +3261,7 @@
       reasons: showReasons ? null : all.map((pick) => pick.reason), // private, in pick order
       show_reasons: showReasons,
       age: data.get('age'),
-      heritage: data.getAll('heritage'), // one choice, kept as a list like older responses
+      heritage: null, // no longer asked (the question is hidden in index.html)
       residence: data.get('residence'),
       country: abroad.checked ? text('country') : null,
       burning: data.get('burning'),
@@ -3386,11 +3411,13 @@
     root.querySelectorAll('[data-t-aria]').forEach((el) => { el.setAttribute('aria-label', joined(el.dataset.tAria)); });
   }
 
-  // The questions' language switch, 中文 / EN in their top bar: the one in use is marked.
+  // The language switches, 中文 / EN: in the questions' top bar, and in the pick screen's
+  // settings (phones). The one in use is marked in both.
   const questions = $('[data-screen="about"] .demo');
-  const langBtns = [...document.querySelectorAll('#lang-switch [data-lang]')];
+  const langBtns = [...document.querySelectorAll('.lang-switch [data-lang]')];
   function applyQLang() {
     questions.lang = qLang === 'zh' ? 'zh-CN' : 'en';
+    document.body.dataset.lang = qLang; // phones: the floating items' names (style.css)
     langBtns.forEach((btn) => btn.setAttribute('aria-pressed', String(btn.dataset.lang === qLang)));
   }
   langBtns.forEach((btn) => btn.addEventListener('click', () => {
@@ -3400,6 +3427,7 @@
     applyQLang();
     applyText(questions); // answers stay as they are; only the words around them change
     if (formMsg.textContent && formMsg.dataset.msg) fill(formMsg, formMsg.dataset.msg);
+    picker.refitAll(); // the items change size with their names: measured again
   }));
   applyQLang();
 
