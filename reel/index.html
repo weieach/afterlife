@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Standalone page: nothing on the site links here, and search engines are asked to skip it. -->
+  <meta name="robots" content="noindex, nofollow">
+  <title>Reel fill</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../survey/icons/favicon-32.png">
+  <style>
+    :root { --gap: 16px; --controls: 64px; }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: #1c1c1c;
+      color: #eee;
+      font: 15px/1.3 system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--gap);
+      padding: var(--gap);
+      overflow: hidden;
+    }
+    /* 9:16, as large as the window allows (1080 × 1920 when recorded at full size) */
+    .reel {
+      position: relative;
+      background: #000;
+      aspect-ratio: 9 / 16;
+      height: min(calc(100dvh - var(--controls) - 3 * var(--gap)), calc((100vw - 2 * var(--gap)) * 16 / 9));
+      overflow: hidden;
+    }
+    .reel canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    .controls { display: flex; align-items: center; gap: 12px; height: var(--controls); }
+    button {
+      font: inherit;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      padding: 12px 36px;
+      border: 0;
+      border-radius: 999px;
+      background: #fff;
+      color: #000;
+      cursor: pointer;
+    }
+    .btn--outline { background: transparent; color: #fff; box-shadow: inset 0 0 0 1.5px #fff; }
+    button:disabled { opacity: 0.4; cursor: default; }
+    button:not(:disabled):active { transform: scale(0.97); }
+    /* messages sit under the buttons, so they never shift them */
+    .controls { position: relative; }
+    .status { position: absolute; top: calc(100% - 4px); left: 50%; transform: translateX(-50%); white-space: nowrap; color: #888; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="reel" id="reel"><canvas id="canvas"></canvas></div>
+  <div class="controls">
+    <button id="fill" type="button" disabled>Fill</button>
+    <button id="save" type="button" class="btn--outline">Save</button>
+    <span class="status" id="status">Loading cutouts…</span>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+  <!-- the survey's item list and cutout paths -->
+  <script src="../survey/content/en.js"></script>
+  <script src="../survey/content/images.js"></script>
+  <script>
+  (() => {
+    const { Engine, Bodies, Body, Composite, Vertices, Sleeping } = Matter;
+
+    // The world is 540 × 960 units; the canvas scales it to whatever size the reel is drawn at.
+    const W = 540, H = 960;
+    const SPAWN_EVERY = 70;    // ms between drops
+    const MAX_ITEMS = 220;     // hard stop, in case the pile never quite reaches the top
+    const FULL_LINE = 30;      // the pile counts as full once a resting item reaches this close to the top
+    const SIZE = [150, 230];   // typical item size in world units (scaled by each cutout's own shape)
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const reel = document.getElementById('reel');
+    const fillBtn = document.getElementById('fill');
+    const statusEl = document.getElementById('status');
+
+    // ---- cutouts -----------------------------------------------------------------------------
+    const IMG = window.SURVEY_IMAGES;
+    const items = window.SURVEY_CONTENT.en.items;
+    const catOf = Object.fromEntries(items.map((it) => [it.id, it.category]));
+    const sources = Object.entries(IMG.files)
+      .filter(([id]) => IMG.folders[catOf[id]])
+      .map(([id, file]) => ({ id, src: '../survey/' + IMG.base + IMG.folders[catOf[id]] + '/' + file }));
+
+    const ready = []; // { img, hull (unit-scaled, centred on the image), area }
+
+    function convexHull(pts) {
+      pts.sort((a, b) => a.x - b.x || a.y - b.y);
+      const cross = (o, a, b) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+      const lower = [], upper = [];
+      for (const p of pts) {
+        while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
+        lower.push(p);
+      }
+      for (let i = pts.length - 1; i >= 0; i--) {
+        const p = pts[i];
+        while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
+        upper.push(p);
+      }
+      upper.pop(); lower.pop();
+      return lower.concat(upper);
+    }
+
+    // Thin a hull to at most n points, keeping the ones that turn the most.
+    function simplify(hull, n) {
+      const pts = hull.slice();
+      while (pts.length > n) {
+        let worst = 0, worstArea = Infinity;
+        for (let i = 0; i < pts.length; i++) {
+          const a = pts[(i - 1 + pts.length) % pts.length], b = pts[i], c = pts[(i + 1) % pts.length];
+          const area = Math.abs((b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y));
+          if (area < worstArea) { worstArea = area; worst = i; }
+        }
+        pts.splice(worst, 1);
+      }
+      return pts;
+    }
+
+    // Outline of the opaque part of a cutout, in units where the image's longer side is 1.
+    function outline(img) {
+      const S = 96;
+      const k = S / Math.max(img.naturalWidth, img.naturalHeight);
+      const w = Math.max(1, Math.round(img.naturalWidth * k)), h = Math.max(1, Math.round(img.naturalHeight * k));
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const g = c.getContext('2d', { willReadFrequently: true });
+      g.drawImage(img, 0, 0, w, h);
+      const a = g.getImageData(0, 0, w, h).data;
+      const pts = [];
+      for (let y = 0; y < h; y++) {
+        let l = -1, r = -1;
+        for (let x = 0; x < w; x++) if (a[(y * w + x) * 4 + 3] > 60) { if (l < 0) l = x; r = x; }
+        if (l >= 0) pts.push({ x: l, y }, { x: r + 1, y }, { x: l, y: y + 1 }, { x: r + 1, y: y + 1 });
+      }
+      const long = Math.max(w, h);
+      const toUnit = (p) => ({ x: (p.x - w / 2) / long, y: (p.y - h / 2) / long });
+      let hull = pts.length >= 3 ? simplify(convexHull(pts), 14).map(toUnit) : [];
+      const area = hull.length >= 3 ? Math.abs(Vertices.area(hull, true)) : 0;
+      if (area < 0.02) {
+        hull = [toUnit({ x: 0, y: 0 }), toUnit({ x: w, y: 0 }), toUnit({ x: w, y: h }), toUnit({ x: 0, y: h })];
+      }
+      return { hull, area: Math.abs(Vertices.area(hull, true)), iw: w / long, ih: h / long };
+    }
+
+    let loaded = 0;
+    sources.forEach(({ src }) => {
+      const img = new Image();
+      img.decoding = 'async';
+      img.onload = () => {
+        let shape;
+        try {
+          shape = outline(img);
+        } catch (e) {
+          // Pixels can't be read (e.g. the page opened as a file:// URL): collide as a plain rectangle.
+          const long = Math.max(img.naturalWidth, img.naturalHeight) || 1;
+          const iw = img.naturalWidth / long, ih = img.naturalHeight / long;
+          const hull = [{ x: -iw / 2, y: -ih / 2 }, { x: iw / 2, y: -ih / 2 }, { x: iw / 2, y: ih / 2 }, { x: -iw / 2, y: ih / 2 }];
+          shape = { hull, area: iw * ih, iw, ih };
+        }
+        ready.push({ img, ...shape });
+        done();
+      };
+      img.onerror = done;
+      img.src = src;
+    });
+    function done() {
+      loaded++;
+      if (ready.length) fillBtn.disabled = false;
+      statusEl.textContent = loaded < sources.length ? `Loading cutouts… ${loaded}/${sources.length}` : '';
+    }
+
+    // ---- physics -----------------------------------------------------------------------------
+    const engine = Engine.create({ enableSleeping: true, positionIterations: 10, velocityIterations: 8 });
+    engine.gravity.y = 1.1;
+    const wall = (x, y, w, h) => Bodies.rectangle(x, y, w, h, { isStatic: true, friction: 0.4 });
+    const T = 200, TALL = H * 3;
+    Composite.add(engine.world, [
+      wall(W / 2, H + T / 2, W + 2 * T, T),            // floor
+      wall(-T / 2, H - TALL / 2, T, TALL),             // sides reach well above the frame,
+      wall(W + T / 2, H - TALL / 2, T, TALL),          // so items dropped from up there stay in
+    ]);
+
+    let bag = [];
+    function nextCutout() {
+      if (!bag.length) {
+        bag = ready.slice();
+        for (let i = bag.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [bag[i], bag[j]] = [bag[j], bag[i]];
+        }
+      }
+      return bag.pop();
+    }
+
+    function drop() {
+      const cut = nextCutout();
+      const target = SIZE[0] + Math.random() * (SIZE[1] - SIZE[0]);
+      // size by area, so long thin things don't come out huge and round ones tiny
+      let s = target / Math.sqrt(cut.area / 0.55);
+      s = Math.min(s, (W * 0.6) / Math.max(cut.iw, cut.ih)); // nothing wider/taller than 60% of the frame
+      const verts = cut.hull.map((p) => ({ x: p.x * s, y: p.y * s }));
+      const centre = Vertices.centre(verts);
+      const half = (Math.max(cut.iw, cut.ih) * s) / 2;
+      const x = half + Math.random() * Math.max(1, W - 2 * half);
+      const body = Bodies.fromVertices(x, -half - 20, [verts], {
+        friction: 0.35,
+        frictionStatic: 0.8,
+        restitution: 0.15,
+        density: 0.0012,
+        sleepThreshold: 40,
+      });
+      Body.setAngle(body, (Math.random() - 0.5) * 1.2);
+      Body.setAngularVelocity(body, (Math.random() - 0.5) * 0.08);
+      Body.setVelocity(body, { x: (Math.random() - 0.5) * 2, y: 2 + Math.random() * 3 });
+      body.cut = { img: cut.img, w: cut.iw * s, h: cut.ih * s, ox: -centre.x, oy: -centre.y };
+      body.born = performance.now();
+      Composite.add(engine.world, body);
+      dropped.push(body);
+    }
+
+    let dropped = [];
+    let filling = false;
+    let lastDrop = 0;
+
+    function isFull(now) {
+      if (dropped.length >= MAX_ITEMS) return true;
+      for (const b of dropped) {
+        const settled = b.isSleeping || (now - b.born > 1500 && b.speed < 0.3);
+        if (settled && b.bounds.min.y < FULL_LINE) return true;
+      }
+      return false;
+    }
+
+    function fill() {
+      // empty instantly, then start over
+      for (const b of dropped) Composite.remove(engine.world, b);
+      dropped = [];
+      bag = [];
+      filling = true;
+      lastDrop = 0;
+    }
+
+    fillBtn.addEventListener('click', fill);
+    document.addEventListener('keydown', (e) => {
+      if ((e.key === ' ' || e.key === 'Enter') && !fillBtn.disabled && !(document.activeElement instanceof HTMLButtonElement)) {
+        e.preventDefault();
+        fill();
+      }
+    });
+
+    // ---- drawing -----------------------------------------------------------------------------
+    let scale = 1;
+    function resize() {
+      const r = reel.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.round(r.width * dpr);
+      canvas.height = Math.round(r.height * dpr);
+      scale = canvas.width / W;
+    }
+    new ResizeObserver(resize).observe(reel);
+    resize();
+
+    function draw(g = ctx, k = scale) {
+      g.setTransform(1, 0, 0, 1, 0, 0);
+      g.fillStyle = '#000';
+      g.fillRect(0, 0, g.canvas.width, g.canvas.height);
+      g.imageSmoothingQuality = 'high';
+      for (const b of dropped) {
+        const c = b.cut;
+        g.setTransform(k, 0, 0, k, 0, 0);
+        g.translate(b.position.x, b.position.y);
+        g.rotate(b.angle);
+        g.drawImage(c.img, c.ox - c.w / 2, c.oy - c.h / 2, c.w, c.h);
+      }
+    }
+
+    // ---- save --------------------------------------------------------------------------------
+    // Redraws the current frame at 2K (1440 × 2560) and downloads it as a PNG.
+    const SAVE_W = 1440, SAVE_H = 2560;
+    const saveBtn = document.getElementById('save');
+    saveBtn.addEventListener('click', () => {
+      const out = document.createElement('canvas');
+      out.width = SAVE_W;
+      out.height = SAVE_H;
+      draw(out.getContext('2d'), SAVE_W / W);
+      const d = new Date(), p = (n) => String(n).padStart(2, '0');
+      const name = `reel-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.png`;
+      try {
+        out.toBlob((blob) => {
+          if (!blob) return flash('Couldn’t save the image');
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = name;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 10000);
+          flash('Saved ' + name);
+        }, 'image/png');
+      } catch (e) {
+        // the browser won't export images loaded from file:// pages
+        flash('Can’t save when opened as a file: use a local server');
+      }
+    });
+
+    let flashTimer;
+    function flash(msg) {
+      statusEl.textContent = msg;
+      clearTimeout(flashTimer);
+      flashTimer = setTimeout(() => { statusEl.textContent = ''; }, 3000);
+    }
+
+    let last = performance.now();
+    function tick(now) {
+      const dt = Math.min(now - last, 1000 / 30);
+      last = now;
+      if (filling) {
+        if (isFull(now)) filling = false;
+        else if (now - lastDrop > SPAWN_EVERY && ready.length) { drop(); lastDrop = now; }
+      }
+      Engine.update(engine, dt);
+      draw();
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  })();
+  </script>
+</body>
+</html>

@@ -45,7 +45,7 @@ window.SURVEY_CONTENT.en = {
   },
 
   pick: {
-    headline: 'If you were headed to the underworld tomorrow, what five things would you take with you?',
+    headline: 'If you had to report to the underworld tomorrow, what five items would you take with you?',
     note: 'Note: Every provided option is sourced from actual online store offerings.', // under the question, with an info icon (English only)
     hint: 'Click on a floating item or drag it in the can to make a selection',
     clear: 'Clear screen',

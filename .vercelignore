@@ -21,3 +21,4 @@
 # Vercel link files and tokens
 .vercel
 .env*
+/reel/README.md
