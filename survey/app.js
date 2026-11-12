@@ -795,7 +795,11 @@
     // "下滑以继续 Scroll to continue" in the header row: fades in after 5s on the first panel,
     // fades out as you scroll on, and doesn't come back once you've scrolled past (this visit).
     const scrollTip = $('#scroll-tip');
-    setText(scrollTip, `${t('intro.scrollTip', 'zh')} ${t('intro.scrollTip', 'en')}`);
+    // one inline span inside the flex box, so the two languages share a baseline and keep the
+    // space between them (as separate flex items, each was centred on its own and the space dropped)
+    const tipText = document.createElement('span');
+    setText(tipText, `${t('intro.scrollTip', 'zh')} ${t('intro.scrollTip', 'en')}`);
+    scrollTip.replaceChildren(tipText);
     const TIP_DELAY = 5000;
     let tipTimer = null;
     let tipRetired = false;
@@ -1201,8 +1205,8 @@
       p.el.querySelectorAll('.pill__img, .pill__flames').forEach((el) => el.remove());
       if (img) {
         // fits a square box, so a tall cutout (the ATM) is no bigger than the rest; a custom item
-        // keeps its capsule's width
-        const box = Math.round(R * 0.66);
+        // keeps its capsule's width. Only a little larger than it was loose (was R * 0.66).
+        const box = Math.round(R * 0.55);
         const fit = Math.min(1, img.naturalWidth / img.naturalHeight);
         const w = p.imgW || Math.round(box * fit);
         const h = Math.round((w * img.naturalHeight) / img.naturalWidth);
@@ -2229,10 +2233,11 @@
       });
     }
     // Fit inside a square box, so tall cutouts (the cane) don't tower over the rest. A little
-    // larger while searching, where the box follows the screen's width. A little smaller on phones.
+    // larger while searching, where the box follows the screen's width. A little smaller on phones,
+    // and 7% smaller on desktop.
     const thumbBox = () => {
       const box = searchMode ? Math.min(150, Math.max(90, W * 0.095)) : Math.min(110, R * 0.5);
-      return Math.round(W <= 700 ? box * 0.88 : box);
+      return Math.round(box * (W <= 700 ? 0.88 : 0.93));
     };
     function sizeThumb(p) {
       const img = p.thumbImg;
@@ -2434,7 +2439,6 @@
     function syncClear() {
       const any = searchMode && !burning && pills.some((p) => !p.filtered && !picks.includes(p) && p.mode !== 'exit');
       if (clearBtn.hidden === any) clearBtn.hidden = !any;
-      if (any && !clearBtn.title) clearBtn.title = clearBtn.getAttribute('aria-label') || ''; // "清空屏幕 / Clear screen" on hover
     }
     // Phones: once more than CROWD items float outside the tin, the question fades away so
     // they aren't drawn over it (the spare "Other" doesn't count). It comes back as they go.
@@ -2765,11 +2769,6 @@
       settings.hidden = !open;
       settingsBtn.setAttribute('aria-expanded', String(open));
     }
-    // a square as tall as Back beside it (its two lines set its height, which varies by screen)
-    new ResizeObserver(() => {
-      const h = backBtn.getBoundingClientRect().height; // unrounded, so the two line up exactly
-      if (h) settingsBtn.style.setProperty('--side', `${h}px`);
-    }).observe(backBtn);
     settingsBtn.addEventListener('click', () => openSettings(settings.hidden));
     addEventListener('resize', () => { if (!settings.hidden) placeSettingsPanel(); });
     document.addEventListener('pointerdown', (e) => {

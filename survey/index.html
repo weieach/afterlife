@@ -111,6 +111,8 @@
         <!-- right of the field, only while there are loose items on screen: drops them all out -->
         <button class="search__clear" type="button" id="search-clear" data-t-aria="pick.clear" hidden>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>
+          <!-- speech bubble above the × on hover (style.css), in place of the browser's tooltip -->
+          <span class="search__tip" aria-hidden="true"><span lang="zh-CN">清空未选物品</span><span>Clear unpicked items</span></span>
         </button>
       </div>
       <!-- "Note: Every provided option is…", in the margin under the field (text and place from app.js) -->

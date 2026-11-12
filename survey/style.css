@@ -10,6 +10,7 @@
   --required: #d40000; /* the asterisk on required questions */
   --gutter: clamp(16px, 2.6vw, 50px);
   --topbar-pad: clamp(10px, 1.4vw, 20px); /* space above the nav's contents */
+  --nav-row: 64px; /* the nav's row: a header button's height (two lines), 53px on phones */
   --font: "Nanum Myeongjo", "Songti SC", "Noto Serif SC", serif;
   /* Chinese text. Nanum Myeongjo is Korean: it has only ~130 of the site's Chinese characters
      (mostly in Korean/traditional shapes), so Chinese gets a Chinese serif first. Macs have
@@ -56,6 +57,7 @@ html, body {
   align-items: center;
   gap: 16px;
   padding: var(--topbar-pad) 0 8px;
+  min-height: calc(var(--topbar-pad) + var(--nav-row) + 8px); /* as tall with buttons in it or not */
   color: #fff;
   mix-blend-mode: exclusion;
   pointer-events: none; /* let capsules underneath be grabbed between the controls */
@@ -83,7 +85,9 @@ a.brand { color: inherit; text-decoration: none; }
 /* desktop, in the questions' top bar: Back's padding round it (.btn: 12px 28px) */
 @media (min-width: 701px) { .topbar > .lang-switch { padding: 12px 28px; } }
 .topbar__nav { display: flex; align-items: center; gap: 8px; }
-.topbar .btn { background: #fff; color: #000; border-color: #fff; }
+.topbar .btn { height: var(--nav-row); background: #fff; color: #000; border-color: #fff; }
+/* a link as a header button (the gallery's "Take the survey"): its lines centred like a button's */
+.topbar a.btn { display: inline-flex; flex-direction: column; justify-content: center; }
 .topbar .btn:not(:disabled):hover { background: #000; color: #fff; border-color: #fff; }
 .topbar .btn:disabled { background: #292929; border-color: #292929; color: #949494; }
 /* Back: same box as Continue, outline only */
@@ -611,6 +615,8 @@ html.is-snapping { scroll-snap-type: y mandatory; }
 .pill.as-thumb { gap: 3px; }
 .pill.as-thumb .pill__en,
 .pill.as-thumb .pill__zh { max-width: 140px; }
+/* the English name under a loose cutout: smaller, and grey like the Chinese one */
+.pill.as-thumb .pill__en { font-size: .87em; color: var(--muted); }
 /* "Show image not text": loose items with a cutout show it instead of their name */
 .pill__thumb { display: block; pointer-events: none; filter: drop-shadow(0 3px 8px rgba(0, 0, 0, .08)); transition: filter .15s; } /* wide, soft and light */
 /* categorization: hovering a wedge fades everything outside it; picking one hides the rest */
@@ -777,6 +783,42 @@ html.is-snapping { scroll-snap-type: y mandatory; }
 .search__clear svg { width: 46%; height: 46%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: square; }
 .search__clear:hover { background: var(--fg); color: var(--bg); }
 .search__clear:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+/* "清空未选物品 / Clear unpicked items": a black speech bubble just above the ×, shown at once on
+   hover (no delay, unlike the browser's own tooltip), Chinese over English. Its tail points down
+   at the button. Mice only: phones have no hover. */
+.search__tip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 10px;
+  background: #000;
+  color: #fff;
+  font-family: var(--font); /* a button's own font is the system one */
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  visibility: hidden;
+}
+.search__tip > span:last-child { font-size: 12px; }
+.search__tip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #000;
+  border-bottom-width: 0;
+}
+@media (hover: hover) {
+  .search__clear:hover .search__tip { visibility: visible; }
+}
 .search__field::placeholder { color: var(--fg); opacity: .45; transition: opacity .2s; }
 .search__field:focus { outline: none; }
 .search__field:focus::placeholder { opacity: .25; } /* active: the hint steps back further */
@@ -1014,8 +1056,8 @@ body:has(.screen--intro:not([hidden])) .debug-switch { top: calc(var(--topbar-pa
   flex: none;
   display: grid;
   place-items: center;
-  width: var(--side, 64px); /* --side: Back's height (app.js) */
-  height: var(--side, 64px);
+  width: var(--nav-row); /* square, as tall as Back */
+  height: var(--nav-row);
   aspect-ratio: 1;
   margin: 0;
   padding: 0;
@@ -1533,8 +1575,17 @@ span.cat-chip.bi { display: inline-flex; }
   /* the tin's prompt */
   .inventory__hint { max-width: 66cqw; font-size: clamp(10px, 4.6cqw, 12px); }
   .brand { font-size: 13px; }
-  .topbar .btn { padding: 8px 12px; font-size: 13px; }
+  /* tighter, so the logo has room for its Chinese on one line beside the pick screen's three
+     buttons (three lines in all, within the row's height) */
+  .topbar { gap: 8px; }
+  .topbar .btn { padding: 8px 10px; font-size: 13px; }
+  :root { --nav-row: 53px; }
   .thanks__actions { gap: 16px; }
+}
+/* narrow phones (360px wide and so on): a touch smaller again, for the same three lines */
+@media (max-width: 380px) {
+  .brand { font-size: 12px; }
+  .topbar .btn { padding-left: 8px; padding-right: 8px; }
 }
 
 /* Leave-the-survey dialog (the logo, clicked mid-survey) */

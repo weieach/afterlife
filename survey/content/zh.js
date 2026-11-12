@@ -62,7 +62,7 @@ window.SURVEY_CONTENT.zh = {
     language: '语言',
     showAll: '显示全部类别',
     search: '搜索模式',
-    searchPlaceholder: '输入物品名称',
+    searchPlaceholder: '+ 输入物品名称', // the field reads "+ 输入物品名称 Enter name of item..." (app.js RUN_ON)
     settings: '设置',
     categories: '从已有类别中挑选，或直接搜索',
     results: '搜索结果',
